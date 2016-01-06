@@ -13,7 +13,11 @@
 
 
 
-const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+
+const char * locale = setlocale( LC_ALL, "" ); // fuer das Anzeigen von UTF-8 zeichen in der Console
 
 std::vector< std::string > files;
 
@@ -32,3 +36,4 @@ int main()
     std::cin.ignore();
     return 0;
 }
+

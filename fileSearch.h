@@ -4,6 +4,8 @@
   */
 
 #include <stdio.h>  /* defines FILENAME_MAX */
+#include <stdlib.h>
+#include <dirent.h>
 
 #ifdef WIN32
     #include <Windows.h>
@@ -44,45 +46,56 @@ std::string getCurrentPath()
 
 void fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
 {
-    path += filter;
-
-    printf( "Search for \"%s\"\n\n", path.c_str() );
-
-    std::wstringstream cls;
-    cls << path.c_str();
-    std::wstring wpath = cls.str();
-
-#ifdef _WINDOWS_
-    WIN32_FIND_DATA data;
-    HANDLE h = FindFirstFile( wpath.c_str(), &data );
-
-    if( h != INVALID_HANDLE_VALUE )
     {
-        do
-        {
-            char * nPtr = new char[lstrlen( data.cFileName ) + 1];
+        printf( "Search for %s in \"%s\"\n\n", filter.c_str(), path.c_str() );
 
-            for( int i = 0; i < lstrlen( data.cFileName ); i++ )
+        DIR * dir;
+        if( ( dir = opendir( path.c_str() ) ) != NULL )
+        {
+            struct dirent * ent;
+
+            std::transform( filter.begin(), filter.end(), filter.begin(), tolower );
+
+            bool allTypes = false;
+            bool allNames = false;
+
+            std::string filterName;
+            std::string filterType;
+
+            std::size_t pos = filter.find( "." );
+
+            if( pos != std::string::npos )
             {
-                nPtr[i] = char(data.cFileName[i]);
+                filterName = filter.substr( 0, pos );
+                filterType = filter.substr( pos + 1 );
+                allTypes   = (filterType[0] == '*');
+                allNames   = (filterName[0] == '*');
             }
 
-            nPtr[lstrlen( data.cFileName )] = '\0';
+            std::string name;
+            std::string type;
 
-            files.push_back( std::string( nPtr ) );
+            while( ( ent = readdir( dir ) ) != NULL )
+            {
+                // std::cout << ent->d_type << std::endl;
+                name = ent->d_name;
+                pos  = name.find( "." );
+                type = (pos == std::string::npos) ? "?" : name.substr( pos + 1 );
+
+                std::transform( type.begin(), type.end(), type.begin(), tolower );
+
+                if( ( filter.compare( name ) == 0) || allTypes || ( filterType.compare( type ) == 0) )
+                {
+                    files.push_back( std::string( ent->d_name ) );
+                }
+            }
+
+            closedir( dir );
         }
-        while( FindNextFile( h, &data ) );
+        else
+        {
+            perror( "could not open directory" );
+            return;
+        }
     }
-    else
-    {
-        std::cerr << "Error: No such folder." << std::endl;
-    }
-
-    FindClose( h );
-
-#else
-    #ifdef _LINUX_
-    // !TODO
-    #endif
-#endif
 }
