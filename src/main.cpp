@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string.h>
+#include <dirent.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -20,8 +21,19 @@
 using namespace cv;
 using namespace std;
 
+
 int main()
 {
-    cout << "!!!Hello World!!!" << endl;     // prints !!!Hello World!!!
+    Mat input = imread( "images/50Objects/book_3.JPG", CV_LOAD_IMAGE_COLOR );
+
+    Scalar_< int > avgColor = mean( input, noArray() );
+    Scalar_< int > compare( 20, 30, 40, 0 );
+
+    double colorDistance = norm( avgColor, compare, NORM_L2 );
+
+    cout << avgColor << endl;
+    cout << compare << endl;
+    cout << colorDistance << endl;
+
     return ( 0);
 }
