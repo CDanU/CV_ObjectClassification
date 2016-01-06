@@ -1,19 +1,114 @@
-bin/
-images/
+compileSetup.sh
+*.patch
+*.json
+*.orig
 
-.classpath
+# visual studio
+*.opensdf
+*.filters
+
+.[Ee]xternalToolBuilders/
+.[Ss]ettings/
+[Bb]in/
+[Bb]uild/
+[Dd]ebug*/
+[Ii]ncludes/
+[Ii]mages/
+[Ll]ibs/
+[Oo]bj/
+[Rr]elease*/
+[Tt]mp/
+
+
+#===============================================================================
+#https://github.com/github/gitignore
+
+#-------------------------------------------------------------------------------
+C/C++
+#-------------------------------------------------------------------------------
+
+# Compiled Object files
+*.ko
+*.slo
+*.lo
+*.o
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+
+
+#-------------------------------------------------------------------------------
+#eclipse/CDT
+#-------------------------------------------------------------------------------
+
+.metadata
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
 .project
+*.launch
+.cproject
 
-*.class
+#===============================================================================
+#https://stackoverflow.com/questions/8527597/how-do-i-ignore-files-in-a-directory-in-git#answer-8527645
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+#OS junk files
+[Tt]humbs.db
+*.DS_Store
 
-# Package Files #
-*.jar
-*.war
-*.ear
+#Visual Studio files
+*.[Oo]bj
+*.user
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.[Cc]ache
+*.ilk
+*.log
+*.lib
+*.sbr
+*.sdf
+ipch/
+obj/
+Ankh.NoLoad
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-/bin/
+#===============================================================================
