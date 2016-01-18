@@ -75,9 +75,11 @@ namespace CV
 
             void save( const boost::property_tree::ptree& node ){ root.put_child( this->path, node ); }
 
-            static void             write( std::string filename, const boost::property_tree::ptree& node ){ write_json( filename, node ); }
-            static boost::property_tree::ptree::data_type & data( boost::property_tree::ptree::value_type& value )              { return value.second.data(); }
-            static bool             isList( boost::property_tree::ptree::value_type& value )              { return value.second.size() > 0; }
+            static void write( std::string filename, const boost::property_tree::ptree& node ){ write_json( filename, node ); }
+
+            static boost::property_tree::ptree::data_type & data( boost::property_tree::ptree::value_type& value ){ return value.second.data(); }
+
+            static bool isList( boost::property_tree::ptree::value_type& value ){ return value.second.size() > 0; }
 
             template< typename T >
             static void save( boost::property_tree::ptree::value_type& value, std::string name, T obj ){ value.second.put( name, obj ); }

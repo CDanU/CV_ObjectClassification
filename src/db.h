@@ -2,83 +2,91 @@
 
 #include "JsonFileTree.h"
 
-std::shared_ptr< CV::JsonFileTree > Storage( new CV::JsonFileTree() );
-boost::property_tree::ptree db_ptr_table;
 
-std::string db_key_table;
-std::string db_key_entry;
-
-void db_clear()
+class DB
 {
-    db_ptr_table.clear();
-    db_key_table = "";
-    db_key_entry = "";
-    Storage->clear();
-}
+    public:
+        std::shared_ptr< CV::JsonFileTree > source;
 
-void db_save()
-{
-    Storage->write();
-}
+        DB() :
+            source( new CV::JsonFileTree() ){}
+        ~DB(){ close(); }
 
-void db_close()
-{
-    db_save();
-    db_clear();
-}
+        class Table
+        {
+            DB * db = 0;
+            std::string _key;
 
-void db_open( std::string file )
-{
-    Storage->open( file, "rw" );
-}
+            public:
+                boost::property_tree::ptree source;
 
-void db_table( std::string table )
-{
-    db_key_table = table;
-    db_ptr_table = Storage->jumpTo( table );
-}
+                class Entry
+                {
+                    protected:
+                        Table * tb = 0;
+                        std::string _key;
 
-void db_table_save()
-{
-    if( db_key_table != "" ) { Storage->save( db_ptr_table ); }
-    if( db_ptr_table.empty() ) { Storage->erase( db_key_table ); }
-}
+                    public:
+                        Entry( Table* tb, std::string key ) :
+                            tb( tb ), _key( key ){ add(); }
+                        ~Entry(){}
 
-void db_table_delete( std::string key = db_key_table )
-{
-    db_key_table = key;
-    db_ptr_table.clear();
-}
+                        std::string key()   { return _key; }
+                        void        add()   { if( !tb->find( _key ) ) { tb->source.put( _key, "" ); } }
+                        void        remove(){ tb->source.erase( _key ); }
 
-bool db_has_entry( std::string key )
-{
-    return Storage->find( key, db_ptr_table );
-}
+                        template< typename T >
+                        T get(){ return tb->source.get< T >( _key ); }
+                        template< typename T >
+                        void save( T obj ){ tb->source.put( _key, obj ); }
+                };
 
-template< typename T >
-void db_entry_save( T obj )
-{
-    db_ptr_table.put( db_key_entry, obj );
-}
+                Table( DB* db, std::string key ) :
+                    db( db ), _key( key )
+                { source = db->source->jumpTo( key ); }
 
-template< typename T >
-T db_entry_get( std::string key )
-{
-    return db_ptr_table.get< T >( key );
-}
+                ~Table(){}
 
-template< typename T >
-T db_entry( std::string key, T obj = T() )
-{
-    db_key_entry = key;
-    if( !db_has_entry( key ) ) { db_entry_save( obj ); }
-    return db_entry_get< T >( key );
-}
+                std::string key(){ return _key; }
 
-void db_entry_delete( std::string key = db_key_entry )
-{
-    db_ptr_table.erase( key );
-}
+                void clear(){ source.clear(); }
+
+                void save()
+                {
+                    if( source.empty() )
+                    { db->source->erase( _key ); }
+                    else
+                    { db->source->save( source ); }
+                }
+
+                Entry entry( std::string key ){ return Entry( this, key ); }
+
+                bool find( std::string key ){ return db->source->find( key, source ); }
+
+                std::vector< Entry > list()
+                {
+                    std::vector< Entry > l;
+
+                    for( auto& e : source )
+                    { l.push_back( entry( e.first ) ); }
+
+                    return l;
+                }
+        };
+
+        Table table( std::string key ){ return Table( this, key ); }
+
+        void save(){ source->write(); }
+
+        void open( std::string file ){ source->open( file, "rw" ); }
+
+        void close(){ save(); clear(); }
+        void clear(){ source->clear(); }
+};
+
+// -----------------------------------------------------------------------
+
+DB db;
 
 /* DB Test */
 void db_test()
@@ -87,16 +95,16 @@ void db_test()
 
     try
     {
-        db_open( "storrage.json" );
-        // db_clear(); // reset db
+        db.open( "storrage.json" );
+        // db.clear(); // reset db
 
-        db_table( "Picture" );
-        db_entry< std::string >( "name" );
-        db_entry_save( "FirstPic" );
-        db_entry< std::string >( "url" );
-        db_entry< bool >( "enabled" );
-        db_entry_save( true );
-        db_table_save();
+        auto table = db.table( "Picture" );
+        auto entry = table.entry( "name" );
+        entry.save( "FirstPic" );
+        entry = table.entry( "url" );
+        entry = table.entry( "enabled" );
+        entry.save( true );
+        table.save();
     }
     catch( const std::exception& ex )
     {

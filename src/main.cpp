@@ -17,7 +17,7 @@ const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 ze
 /* ShutDown Event */
 void OnExit()
 {
-    db_close();     // save & close db
+    db.close(); // save & close db
 }
 
 int registerEvents()
@@ -32,7 +32,7 @@ const int _registerEvents = registerEvents();
 /* Main */
 int main()
 {
-    // db_test();
-    console();
+    db_test();
+    // console();
     return 0;
 }
