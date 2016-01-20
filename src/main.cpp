@@ -13,6 +13,7 @@
 #include "console.h"
 
 const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
+DB db;
 
 /* ShutDown Event */
 void OnExit()
@@ -32,7 +33,7 @@ const int _registerEvents = registerEvents();
 /* Main */
 int main()
 {
-    db_test();
+    db_test( db );
     // console();
     return 0;
 }

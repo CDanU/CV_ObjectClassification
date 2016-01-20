@@ -1,95 +1,77 @@
 ﻿#pragma once
 
 #include "JsonFileTree.h"
+#include <iostream>
 
+// =============================================================================
 
 class DB
 {
     public:
+        class Table;
         std::shared_ptr< CV::JsonFileTree > source;
 
-        DB() :
-            source( new CV::JsonFileTree() ){}
-        ~DB(){ close(); }
+        void  clear();
+        void  save();
+        void  open( std::string file );
+        Table table( std::string key );
 
-        class Table
-        {
-            DB * db = 0;
-            std::string _key;
+        void close();
 
-            public:
-                boost::property_tree::ptree source;
-
-                class Entry
-                {
-                    protected:
-                        Table * tb = 0;
-                        std::string _key;
-
-                    public:
-                        Entry( Table* tb, std::string key ) :
-                            tb( tb ), _key( key ){ add(); }
-                        ~Entry(){}
-
-                        std::string key()   { return _key; }
-                        void        add()   { if( !tb->find( _key ) ) { tb->source.put( _key, "" ); } }
-                        void        remove(){ tb->source.erase( _key ); }
-
-                        template< typename T >
-                        T get(){ return tb->source.get< T >( _key ); }
-                        template< typename T >
-                        void save( T obj ){ tb->source.put( _key, obj ); }
-                };
-
-                Table( DB* db, std::string key ) :
-                    db( db ), _key( key )
-                { source = db->source->jumpTo( key ); }
-
-                ~Table(){}
-
-                std::string key(){ return _key; }
-
-                void clear(){ source.clear(); }
-
-                void save()
-                {
-                    if( source.empty() )
-                    { db->source->erase( _key ); }
-                    else
-                    { db->source->save( source ); }
-                }
-
-                Entry entry( std::string key ){ return Entry( this, key ); }
-
-                bool find( std::string key ){ return db->source->find( key, source ); }
-
-                std::vector< Entry > list()
-                {
-                    std::vector< Entry > l;
-
-                    for( auto& e : source )
-                    { l.push_back( entry( e.first ) ); }
-
-                    return l;
-                }
-        };
-
-        Table table( std::string key ){ return Table( this, key ); }
-
-        void save(){ source->write(); }
-
-        void open( std::string file ){ source->open( file, "rw" ); }
-
-        void close(){ save(); clear(); }
-        void clear(){ source->clear(); }
+        DB();
+        ~DB();
 };
 
-// -----------------------------------------------------------------------
+// =============================================================================
 
-DB db;
+class DB::Table
+{
+    protected:
+        DB * db = 0;
+        std::string _key;
+
+    public:
+        class Entry;
+        boost::property_tree::ptree source;
+
+        void                 clear();
+        Entry                entry( std::string key );
+        bool                 find( std::string key );
+        std::string          key();
+        std::vector< Entry > list();
+        void                 save();
+
+        Table( DB* db, std::string key );
+        ~Table();
+};
+
+// =============================================================================
+
+class DB::Table::Entry
+{
+    protected:
+        DB::Table * tb = 0;
+        std::string _key;
+
+    public:
+        std::string key();
+        void        add();
+        void        remove();
+
+        template< typename T >
+        T get();
+
+        template< typename T >
+        void save( T obj );
+
+        Entry( DB::Table* tb, std::string key );
+        ~Entry();
+};
+
+// =============================================================================
 
 /* DB Test */
-void db_test()
+static void db_test( DB& db )
 {
     std::cout << "DB Test...\n";
 
@@ -100,10 +82,12 @@ void db_test()
 
         auto table = db.table( "Picture" );
         auto entry = table.entry( "name" );
+
         entry.save( "FirstPic" );
         entry = table.entry( "url" );
         entry = table.entry( "enabled" );
         entry.save( true );
+
         table.save();
     }
     catch( const std::exception& ex )
