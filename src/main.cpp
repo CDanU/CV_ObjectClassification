@@ -6,11 +6,19 @@
 // Description : This Application ... TEXT ...
 // ============================================================================
 
-#include "includes.h"
-#include "fileSearch.h"
-#include "showImage.h"
 #include "db.h"
 #include "console.h"
+
+void OnExit();
+
+#ifdef WIN32
+    #include <Windows.h>
+    #define REGISTER_SHUTDOWN_EVENT SetConsoleCtrlHandler( OnConsoleClose, TRUE );
+BOOL WINAPI OnConsoleClose( DWORD dwCtrlType ){ OnExit(); return FALSE; }
+#else
+    #define REGISTER_SHUTDOWN_EVENT
+#endif
+
 
 const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
 DB db;

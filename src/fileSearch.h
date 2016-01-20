@@ -3,8 +3,24 @@
   * Search for files in a folder
   */
 
-std::string getCurrentPath()
+#include <cerrno>
+#include <dirent.h>
+#include <stdio.h>
+#include <iostream>
+#include <string>
+#ifdef WIN32
+    #include <Windows.h>
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+#endif
+
+static std::string getCurrentPath()
 {
+    using namespace std;
+
     char cCurrentPath[FILENAME_MAX];
 
     if( !GetCurrentDir( cCurrentPath, sizeof(cCurrentPath) ) )
@@ -24,55 +40,47 @@ std::string getCurrentPath()
     return path;
 }
 
-void fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
+static void fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
 {
     printf( "Search for %s in \"%s\"\n", filter.c_str(), path.c_str() );
 
-    DIR * dir;
-    if( ( dir = opendir( path.c_str() ) ) != NULL )
-    {
-        struct dirent * ent;
+    DIR * dir = opendir( path.c_str() );
 
-        std::transform( filter.begin(), filter.end(), filter.begin(), ::tolower );
-
-        bool allTypes = false;
-        bool allNames = false;
-
-        std::string filterName;
-        std::string filterType;
-
-        std::size_t pos = filter.find( "." );
-
-        if( pos != std::string::npos )
-        {
-            filterName = filter.substr( 0, pos );
-            filterType = filter.substr( pos + 1 );
-            allTypes   = (filterType[0] == '*');
-            allNames   = (filterName[0] == '*');
-        }
-
-        std::string name;
-        std::string type;
-
-        while( ( ent = readdir( dir ) ) != NULL )
-        {
-            name = ent->d_name;
-            pos  = name.find( "." );
-            type = (pos == std::string::npos) ? "?" : name.substr( pos + 1 );
-
-            std::transform( type.begin(), type.end(), type.begin(), ::tolower );
-
-            if( ( filter.compare( name ) == 0) || allTypes || ( filterType.compare( type ) == 0) )
-            {
-                files.push_back( std::string( ent->d_name ) );
-            }
-        }
-
-        closedir( dir );
-    }
-    else
+    if( dir == NULL )
     {
         perror( "could not open directory" );
         return;
     }
+
+    std::transform( filter.begin(), filter.end(), filter.begin(), ::tolower );
+
+    struct dirent * ent;
+    bool allTypes = false;
+    std::string filterType;
+    std::size_t pos = filter.find( "." );
+
+    if( pos != std::string::npos )
+    {
+        filterType = filter.substr( pos + 1 );
+        allTypes   = (filterType[0] == '*');
+    }
+
+    std::string name;
+    std::string type;
+
+    while( ( ent = readdir( dir ) ) != NULL )
+    {
+        name = ent->d_name;
+        pos  = name.find( "." );
+        type = (pos == std::string::npos) ? "?" : name.substr( pos + 1 );
+
+        transform( type.begin(), type.end(), type.begin(), tolower );
+
+        if( ( filter.compare( name ) == 0) || allTypes || ( filterType.compare( type ) == 0) )
+        {
+            files.push_back( std::string( ent->d_name ) );
+        }
+    }
+
+    closedir( dir );
 }

@@ -1,6 +1,8 @@
-﻿#include "includes.h"
+﻿#include <iostream>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 
-void showImage( std::string file )
+static void showImage( std::string file )
 {
     cv::Mat image = cv::imread( file, CV_LOAD_IMAGE_COLOR ); // Read the file
 

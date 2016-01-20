@@ -1,12 +1,13 @@
 #pragma once
 
-#include "includes.h"
-
-std::string workpath = "../../50Objects/"; // getCurrentPath();
-std::vector< std::string > files;
-
 /* Console Input */
-void console()
+
+#include "fileSearch.h"
+#include "showImage.h"
+
+static const std::string workpath = "../../50Objects/"; // getCurrentPath();
+
+static void console()
 {
     std::cout <<
         "##############################################\n" <<
@@ -17,6 +18,7 @@ void console()
         "# Description : This Application ... TEXT ..\n" <<
         "##############################################\n\n";
 
+    std::vector< std::string > files;
     std::string cmd;
     size_t f;
     char input[100];
@@ -43,18 +45,20 @@ void console()
                 count++;
             }
         }
-        else if( ( f = cmd.find( "show" ) ) == 0 )
+        else if( cmd.find( "show" ) == 0 )
         {
+            int index = 0;
+
             std::string numbStr = cmd.size() > 5 ? cmd.substr( 5 ) : "";
-            int index           = 0;
             if( numbStr != "" ) { std::istringstream( numbStr ) >> index; }
-            if( !files.empty() && ( index >= 0) && ( index < files.size() ) ) { showImage( workpath + files[index] ); }
-            else
+
+            if( !files.empty() && ( index >= 0) && ( index < files.size() ) )
             {
-                std::cout << "Invalid Index or no files in list!\n:" << index;
+                showImage( workpath + files[index] );
             }
+            else { std::cout << "Invalid Index or no files in list!\n:" << index; }
         }
-        else if( ( cmd == "q") || ( cmd == "exit") )
+        else if( (cmd == "q") || (cmd == "exit") )
         {
             break;
         }
