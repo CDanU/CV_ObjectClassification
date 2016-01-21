@@ -9,7 +9,7 @@ class DB
 {
     public:
         class Table;
-        std::shared_ptr< CV::JsonFileTree > source;
+        CV::JsonFileTree source;
 
         void  clear();
         void  save();

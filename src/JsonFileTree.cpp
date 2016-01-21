@@ -51,7 +51,7 @@ namespace CV
 
     const ptree & JsonFileTree::jumpTo( string path )
     {
-        node       = &( root.get_child( path, ptree() ) );
+        node       = &( root.get_child( path, root ) );
         this->path = path;
 
         return *node;

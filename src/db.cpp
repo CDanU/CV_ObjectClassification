@@ -1,4 +1,5 @@
 #include "db.h"
+#include "JsonFileTree.h"
 
 using namespace std;
 
@@ -7,13 +8,16 @@ using namespace std;
 
 // =============================================================================
 
-void DB::clear(){ source->clear(); }
+void DB::clear(){ source.clear(); }
 
-void DB::open( string file ){ source->open( file, "rw" ); }
+void DB::open( string file ){ source.open( file, "rw" ); }
 
-void DB::save(){ source->write(); }
+void DB::save(){ source.write(); }
 
-TABLE DB::table( string key ){ return Table( this, key ); }
+TABLE DB::table( string key )
+{
+    return Table( this, key );
+}
 
 void DB::close()
 {
@@ -22,7 +26,7 @@ void DB::close()
 }
 
 DB::DB() :
-    source( new CV::JsonFileTree() )
+    source( CV::JsonFileTree() )
 {}
 
 DB::~DB(){ close(); }
@@ -33,7 +37,7 @@ void TABLE::clear(){ source.clear(); }
 
 ENTRY TABLE::entry( string key ){ return Entry( this, key ); }
 
-bool TABLE::find( string key ){ return db->source->find( key, source ); }
+bool TABLE::find( string key ){ return db->source.find( key, source ); }
 
 string TABLE::key(){ return _key; }
 
@@ -50,13 +54,13 @@ vector< ENTRY > TABLE::list()
 
 void TABLE::save()
 {
-    source.empty() ? db->source->erase( _key ) : db->source->save( source );
+    source.empty() ? db->source.erase( _key ) : db->source.save( source );
 }
 
 TABLE::Table( DB * db, string key ) :
     db( db ), _key( key )
 {
-    source = db->source->jumpTo( key );
+    source = db->source.jumpTo( key );
 }
 
 TABLE::~Table(){}
