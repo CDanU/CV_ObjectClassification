@@ -38,10 +38,16 @@ int registerEvents()
 // Register Events by initalize this integer
 const int _registerEvents = registerEvents();
 
+#include "FeatureAverageColor.h"
+#include <iostream>
+
 /* Main */
 int main()
 {
+    // std::cout << "hello: " << ((Ue5::Feature*)NULL)->calculate() << "\n";
+
     db_test( db );
     // console();
+    std::cin.ignore();
     return 0;
 }

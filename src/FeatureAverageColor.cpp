@@ -1,25 +1,23 @@
-/*
-  * FeatureAverageColor.cpp
-  *
-  *  Created on: Jan 7, 2016
-  *      Author: dan
-  *
-
 #include "FeatureAverageColor.h"
 
-
-double FeatureAverageColor::calculate( cv::Mat image, std::vector< int > points )
+namespace Ue5
 {
-    return (0.0);
-}
+	FeatureValue FeatureAverageColor::calculate(cv::Mat image, std::vector<uint> points)
+	{
+		FeatureValue list;
 
-FeatureAverageColor::FeatureAverageColor()
-{
-    // TODO Auto-generated constructor stub
-}
+		// TODO
 
-FeatureAverageColor::~FeatureAverageColor()
-{
-    // TODO Auto-generated destructor stub
+		return list;
+	}
+
+	FeatureAverageColor::FeatureAverageColor()
+	{
+		// TODO Auto-generated constructor stub
+	}
+
+	FeatureAverageColor::~FeatureAverageColor()
+	{
+		// TODO Auto-generated destructor stub
+	}
 }
-*/
