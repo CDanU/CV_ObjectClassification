@@ -8,8 +8,8 @@ namespace Ue5
     class Training
     {
         private:
-            std::string picturesDir;
             DB & db;
+            std::string picturesDir;
             std::vector< std::unique_ptr< Feature > > & featureList;
 
         public:

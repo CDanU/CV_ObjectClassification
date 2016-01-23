@@ -5,103 +5,82 @@
 #include <regex>
 #include <vector>
 #include <map>
+#include <string>
+
+using namespace std;
 
 namespace Ue5
 {
-    std::vector< std::string > match( std::string search, std::string regex )
+    static vector< string > match( string search, string regex )
     {
-        std::vector< std::string > list;
-        std::regex base_regex( "([a-z]+)\\.txt" );
-        std::smatch match;
+        vector< string > list;
+        smatch match;
 
-        if( std::regex_match( search, match, std::regex( regex ) ) )
+        if( regex_match( search, match, ::regex( regex ) ) )
         {
-            // std::cout << search << '\n';
             for( size_t i = 0; i < match.size(); ++i )
             {
-                std::ssub_match sub_match = match[i];
-                std::string piece         = sub_match.str();
-                // std::cout << "  submatch " << i << ": " << piece << '\n';
+                ssub_match sub_match = match[i];
+                string piece         = sub_match.str();
                 list.push_back( piece );
             }
         }
         return list;
     }
 
-    Training::Training( std::string dir, std::vector< std::unique_ptr< Feature > >& featureList, DB& db ) :
-        picturesDir( dir ), featureList( featureList ), db( db )
-    {}
-
-    Training::~Training(){}
+// =============================================================================
 
     void Training::start()
     {
-        std::vector< std::string > files;
+        const string regexString = "^(.[^_]+).*$";
 
-        if( !files.empty() ) { files.clear(); }
+        map< string, vector< string > > groupFilesMap;
+
+        vector< string > files;
         fileSearch( files, picturesDir, "*.jpg" );
 
-        std::cout << "List Files:\n";
-        unsigned int count = 0;
-
-        std::map< std::string, std::vector< std::string > > map;
-
+        // sort files int groups inside groupFilesMap
         for( auto& file : files )
         {
-            auto list = match( file, "^(.[^_]+).*$" );
+            auto list = match( file, regexString );
+            if( list.size() == 0 ) { continue; }
+            // .................................................................
 
-            if( list.size() > 1 )
-            {
-                auto name = list[1];
-                std::transform( name.begin(), name.end(), name.begin(), tolower );
-                if( map.find( name ) == map.end() ) { map[name] = std::vector< std::string >(); }
-                map[name].push_back( file );
-                // std::cout << count << ": " << name << std::endl;
-            }
-            count++;
+            auto name = list[1];
+            transform( name.begin(), name.end(), name.begin(), ::tolower );
+
+            if( groupFilesMap.find( name ) == groupFilesMap.end() ) { groupFilesMap[name] = vector< string >(); }
+
+            groupFilesMap[name].push_back( file );
         }
 
-        // auto& root = db.source.getRoot();
-        ptree root;
-
-        for( auto& e : map )
+        // write settings in json file
+        auto & root = db.source.getRoot();
+        for( auto& e : groupFilesMap )
         {
             if( e.first.empty() ) { continue; }
-            std::cout << e.first << std::endl;
 
-            auto table      = db.table( e.first );
-            auto entry      = table.entry( "files" );
-            std::string all = "";
-            std::cout << "\t" << db.source.getPath() << std::endl;
-
+            ptree groupGroup;
+            ptree fileGroup;
             for( auto& file : e.second )
             {
-                all += file + "; ";
-                // std::cout << "\t" << file << std::endl;
+                ptree fileName;
+                fileName.put( "", file );
+                fileGroup.push_back( std::make_pair( "", fileName ) );
             }
 
-            entry.save( all );
-            root.put_child( e.first, table.source );
-            std::cout << root.size() << std::endl;
-            // table.save();
-            // db.source.save(table.source);
+            groupGroup.push_back( std::make_pair( "files", fileGroup ) );
+            root.push_back( std::make_pair( e.first, groupGroup ) );
         }
 
-        // bugfix
-        // db.source.replace(root);
-
-        std::cin.ignore();
+        db.save();
     }
+
+// =============================================================================
+
+    Training::Training( string dir, vector< unique_ptr< Feature > >& featureList, DB& db )
+        : picturesDir( dir ), featureList( featureList ), db( db )
+    {}
+
+    Training::~Training(){}
 }
-
-
-// auto table = db.table("Group1");
-// auto entry = table.entry("name");
-
-// entry.save("blabla");
-// entry = table.entry("feature_values");
-// entry.save("0.0");
-// entry = table.entry("pictures");
-// entry.save("C://...");
-
-// table.save();

@@ -55,7 +55,7 @@ void training()
 {
     std::cout << "Start Training...\n";
 
-    Ue5::Training t( "../../50Objects/", featureList, db );
+    Ue5::Training t( "images/50Objects/", featureList, db );
 
     t.start();
 }
@@ -73,8 +73,10 @@ int main()
     catch( const std::exception& ex )
     {
         std::cout << ex.what();
-        std::cin.ignore();
+        exit( -1 );
     }
+
+    std::cin.ignore();
 
     return 0;
 }
