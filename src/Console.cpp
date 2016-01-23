@@ -1,13 +1,9 @@
-#pragma once
+#include "Console.h"
+#include <iostream>
+#include <sstream>
+#include "ShowImage.h"
 
-/* Console Input */
-
-#include "fileSearch.h"
-#include "showImage.h"
-
-static const std::string workpath = "../../50Objects/"; // getCurrentPath();
-
-static void console()
+void Ue5::console( std::string workpath )
 {
     std::cout <<
         "##############################################\n" <<
@@ -20,10 +16,9 @@ static void console()
 
     std::vector< std::string > files;
     std::string cmd;
-    size_t f;
     char input[100];
 
-    fileSearch( files, workpath, "*.jpg" );
+    Ue5::fileSearch( files, workpath, "*.jpg" );
 
     while( true )
     {
@@ -34,7 +29,7 @@ static void console()
         if( cmd == "list" )
         {
             if( !files.empty() ) { files.clear(); }
-            fileSearch( files, workpath, "*.jpg" );
+            Ue5::fileSearch( files, workpath, "*.jpg" );
 
             std::cout << "List Files:\n";
             unsigned int count = 0;
@@ -52,13 +47,13 @@ static void console()
             std::string numbStr = cmd.size() > 5 ? cmd.substr( 5 ) : "";
             if( numbStr != "" ) { std::istringstream( numbStr ) >> index; }
 
-            if( !files.empty() && ( index >= 0) && ( index < files.size() ) )
+            if( !files.empty() && (index >= 0) && ( index < files.size() ) )
             {
                 showImage( workpath + files[index] );
             }
             else { std::cout << "Invalid Index or no files in list!\n:" << index; }
         }
-        else if( (cmd == "q") || (cmd == "exit") )
+        else if( ( cmd == "q") || ( cmd == "exit") )
         {
             break;
         }

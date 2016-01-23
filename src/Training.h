@@ -1,23 +1,20 @@
-/*
-  * Training.h
-  *
-  *  Created on: Jan 7, 2016
-  *      Author: dan
-  *
+#pragma once
 
-#ifndef SRC_TRAINING_H_
-#define SRC_TRAINING_H_
+#include "Feature.h"
+#include "db.h"
 
-#include <memory>
-#include "IFeature.h"
-
-class Training
+namespace Ue5
 {
-    private:
-        std::string picturesDir;
-        std::vector< std::unique_ptr<IFeature> > featureList;
-    public:
-        Training( std::string dir, std::vector< std::unique_ptr<IFeature> >& featureList );
-        virtual ~Training();
-};
-#endif /* SRC_TRAINING_H_ */
+    class Training
+    {
+        private:
+            std::string picturesDir;
+            DB & db;
+            std::vector< std::unique_ptr< Feature > > & featureList;
+
+        public:
+            Training( std::string dir, std::vector< std::unique_ptr< Feature > >& featureList, DB& db );
+            ~Training();
+            void start();
+    };
+}

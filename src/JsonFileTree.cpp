@@ -1,9 +1,9 @@
 #include "JsonFileTree.h"
+
 #include <iostream>
 
-namespace CV
+namespace Ue5
 {
-    using boost::property_tree::ptree;
     using namespace std;
 
     // static ==================================================================
@@ -24,7 +24,7 @@ namespace CV
     void JsonFileTree::clear()
     {
         path = "";
-        root = ptree();
+        root.clear();
         node = &root;
     }
 
@@ -33,7 +33,9 @@ namespace CV
     template< typename T >
     T JsonFileTree::get( string name ){ return node->get< T >( name ); }
 
-    const ptree & JsonFileTree::getRoot(){ return root; }
+    std::string JsonFileTree::getPath(){ return path; }
+
+    ptree & JsonFileTree::getRoot(){ return root; }
 
     const ptree & JsonFileTree::getNode(){ return *node; }
 
@@ -100,6 +102,8 @@ namespace CV
     void JsonFileTree::printParent(){ print( *node ); }
 
     void JsonFileTree::printRoot(){ print( root ); }
+
+    void JsonFileTree::replace( const ptree& node ){ root = node; }
 
     void JsonFileTree::save( const ptree& node )
     { root.put_child( this->path, node ); }

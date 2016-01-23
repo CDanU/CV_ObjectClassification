@@ -1,23 +1,11 @@
-﻿/*
-  * fileSearh.h
-  * Search for files in a folder
-  */
+#include "FileSearch.h"
 
-#include <cerrno>
-#include <dirent.h>
-#include <stdio.h>
 #include <iostream>
-#include <string>
-#ifdef WIN32
-    #include <Windows.h>
-    #include <direct.h>
-    #define GetCurrentDir _getcwd
-#else
-    #include <unistd.h>
-    #define GetCurrentDir getcwd
-#endif
+#include <algorithm>
+#include <errno.h>
+#include <stdio.h>
 
-static std::string getCurrentPath()
+std::string Ue5::getCurrentPath()
 {
     using namespace std;
 
@@ -29,7 +17,7 @@ static std::string getCurrentPath()
         return "";
     }
 
-    cCurrentPath[sizeof(cCurrentPath) - 1] = '\0';   /* not really required */
+    cCurrentPath[sizeof(cCurrentPath) - 1] = '\0';     /* not really required */
 
     std::string path( cCurrentPath );
     std::replace( path.begin(), path.end(), '\\', '/' );
@@ -40,7 +28,7 @@ static std::string getCurrentPath()
     return path;
 }
 
-static void fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
+void Ue5::fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
 {
     printf( "Search for %s in \"%s\"\n", filter.c_str(), path.c_str() );
 
