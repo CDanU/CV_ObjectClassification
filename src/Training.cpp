@@ -7,6 +7,9 @@
 #include <map>
 #include <string>
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+
 using namespace std;
 
 namespace Ue5
@@ -59,8 +62,10 @@ namespace Ue5
         for( auto& e : groupFilesMap )
         {
             if( e.first.empty() ) { continue; }
+            // ..................................................................
 
             ptree groupGroup;
+
             ptree fileGroup;
             for( auto& file : e.second )
             {
@@ -70,6 +75,31 @@ namespace Ue5
             }
 
             groupGroup.push_back( std::make_pair( "files", fileGroup ) );
+
+
+            for( auto& feature : featureList )
+            {
+                // accumulate features of groups files
+                for( auto& fileName : e.second )
+                {
+                    cv::Mat img = cv::imread( picturesDir + fileName );
+                    feature->accumulate( img );
+                }
+
+                // add accumulated values to ptree
+                ptree featureGroup;
+                for( auto featureVal : feature->getNormedAccumulate() )
+                {
+                    ptree featureValEntry;
+                    featureValEntry.put( "", featureVal );
+                    featureGroup.push_back( std::make_pair( "", featureValEntry ) );
+                }
+
+                groupGroup.push_back( std::make_pair( feature->getFilterName(), featureGroup ) );
+
+                feature->clearAccu();
+            }
+
             root.push_back( std::make_pair( e.first, groupGroup ) );
         }
 

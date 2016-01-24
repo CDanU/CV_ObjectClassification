@@ -1,6 +1,8 @@
+#include <stdint.h>
 #include <iostream>
 
 #include "FeatureAverageColor.h"
+
 
 using namespace cv;
 using namespace std;
@@ -56,9 +58,9 @@ namespace Ue5
             r += ptr->z;
         }
 
-        ret.push_back( r / n );
-        ret.push_back( g / n );
-        ret.push_back( b / n );
+        ret.push_back( r / (n*1.0) );
+        ret.push_back( g / (n*1.0) );
+        ret.push_back( b / (n*1.0) );
 
         //cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
 
