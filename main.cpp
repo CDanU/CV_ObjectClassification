@@ -1,4 +1,4 @@
-/*
+﻿/*
   * Daniel Chumak & Mario Link
   *
   * Name: CV_ObjectClassification
@@ -8,9 +8,11 @@
   * This Application ... TEXT ...
   */
 
+#include "includes.h"
 #include "fileSearch.h"
 #include <string>
 #include "showImage.h"
+#include "db.h"
 
 
 const char * locale = setlocale( LC_ALL, "" ); // fuer das Anzeigen von UTF-8 zeichen in der Console
@@ -18,9 +20,28 @@ const char * locale = setlocale( LC_ALL, "" ); // fuer das Anzeigen von UTF-8 ze
 std::string workpath = "../../50Objects/"; // getCurrentPath();
 std::vector< std::string > files;
 
-/* Console Input */
+/* ShutDown Event */
+void OnExit()
+{
+    closeDB();
+}
+
+/* Main */
 int main()
 {
+    REGISTER_SHUTDOWN_EVENT
+
+        createDB( "test.yml" );
+
+    std::string nnn;
+
+    // Sleep(5000);
+    openDB();
+    readFromDB( "Name", nnn );
+    std::cout << nnn.c_str();
+
+    /* Console Input */
+
     std::cout <<
         "##############################################\n" <<
         "# Name        : CV_ObjectClassification\n" <<

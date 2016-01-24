@@ -1,9 +1,7 @@
-/*
+﻿/*
   * fileSearh.h
   * Search for files in a folder
   */
-
-#include "includes.h"
 
 std::string getCurrentPath()
 {
