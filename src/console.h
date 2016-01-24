@@ -1,47 +1,13 @@
-﻿/*
-  * Daniel Chumak & Mario Link
-  *
-  * Name: CV_ObjectClassification
-  * Date: 06.01.2016
-  * Version: 0.1.0
-  * Description:
-  * This Application ... TEXT ...
-  */
+#pragma once
 
 #include "includes.h"
-#include "fileSearch.h"
-#include <string>
-#include "showImage.h"
-#include "db.h"
-
-
-const char * locale = setlocale( LC_ALL, "" ); // fuer das Anzeigen von UTF-8 zeichen in der Console
 
 std::string workpath = "../../50Objects/"; // getCurrentPath();
 std::vector< std::string > files;
 
-/* ShutDown Event */
-void OnExit()
+/* Console Input */
+void console()
 {
-    closeDB();
-}
-
-/* Main */
-int main()
-{
-    REGISTER_SHUTDOWN_EVENT
-
-        createDB( "test.yml" );
-
-    std::string nnn;
-
-    // Sleep(5000);
-    openDB();
-    readFromDB( "Name", nnn );
-    std::cout << nnn.c_str();
-
-    /* Console Input */
-
     std::cout <<
         "##############################################\n" <<
         "# Name        : CV_ObjectClassification\n" <<
@@ -83,7 +49,10 @@ int main()
             int index           = 0;
             if( numbStr != "" ) { std::istringstream( numbStr ) >> index; }
             if( !files.empty() && ( index >= 0) && ( index < files.size() ) ) { showImage( workpath + files[index] ); }
-            else { std::cout << "Invalid Index or no files in list!\n:" << index; }
+            else
+            {
+                std::cout << "Invalid Index or no files in list!\n:" << index;
+            }
         }
         else if( ( cmd == "q") || ( cmd == "exit") )
         {
@@ -92,7 +61,4 @@ int main()
         else { std::cout << "Unknown Command"; }
         cmd = "";
     }
-
-    std::cin.ignore();
-    return 0;
 }

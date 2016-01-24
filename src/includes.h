@@ -1,4 +1,6 @@
-﻿void OnExit();
+﻿#pragma once
+
+void OnExit();
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 #include <stdlib.h>
