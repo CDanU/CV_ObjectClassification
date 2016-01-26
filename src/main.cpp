@@ -1,19 +1,22 @@
-// ============================================================================
+// =============================================================================
 // Name        : CV_ObjectClassification
 // Author      : Daniel Chumak, Mario Link
 // Version     : 0.3.0
 // Copyright   : HtwDanielMario@2016
 // Description : This Application ... TEXT ...
-// ============================================================================
+// =============================================================================
 
-#include "db.h"
-#include "Training.h"
-#include "FeatureAverageColor.h"
-
-#include <iostream>
-#include "Console.h"
 
 void OnExit();
+int  registerEvents();
+
+#include <iostream>
+
+#include "db.h"
+#include "Console.h"
+#include "Training.h"
+#include "Classification.h"
+#include "FeatureAverageColor.h"
 
 #ifdef WIN32
     #include <Windows.h>
@@ -23,9 +26,16 @@ void OnExit();
     #define REGISTER_SHUTDOWN_EVENT
 #endif
 
+
+using FeatureList = std::vector < std::unique_ptr< Ue5::Feature > >;
+
+
 const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
 Ue5::DB db;
-std::vector< std::unique_ptr< Ue5::Feature > > featureList;
+FeatureList featureList;
+// Register Events by initializing this integer
+const int _registerEvents = registerEvents();
+
 
 /* ShutDown Event */
 void OnExit()
@@ -40,13 +50,10 @@ int registerEvents()
     return 0;
 }
 
-// Register Events by initalize this integer
-const int _registerEvents = registerEvents();
-
 void init()
 {
     db.open( "storrage.json" );
-    db.clear(); // reset db
+    //db.clear(); // reset db
 
     featureList.push_back( std::unique_ptr< Ue5::Feature >( new Ue5::FeatureAverageColor() ) );
 }
@@ -60,13 +67,24 @@ void training()
     t.start();
 }
 
+static void classify( std::string imagePath, std::string groupsConfigPath, std::vector< std::unique_ptr< Ue5::Feature > >& featureList )
+{
+    std::cout << "Start Classification...\n";
+
+    Ue5::Classification c( featureList, groupsConfigPath );
+
+    c.start( imagePath );
+}
+
+
 /* Main */
 int main()
 {
     try
     {
         init();
-        training();
+        // training();
+        classify( "images/50Objects/apple1_4.JPG", "storrage.json", featureList );
         // console();
         // db_test( db );
     }
