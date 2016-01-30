@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <stdint.h>
 #include <vector>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -48,22 +49,24 @@ namespace Ue5
             histo[*itS]++;
         }
 
-        for( uchar i = 0; i < 256; i++ )
-        {
-            if( histo[i] != 0 )
-            {
-                histoStart = i;
-                break;
-            }
-        }
+        bool histoStartFound = false;
+        bool histoEndFound   = false;
 
-        for( uchar i = 255; i >= 0; i-- )
+        for( uchar i = 0, j = 255; i < 256; i++, j-- )
         {
-            if( histo[i] != 0 )
+            if( !histoStartFound && ( histo[i] != 0) )
             {
-                histoEnd = i;
-                break;
+                histoStart      = i;
+                histoStartFound = true;
             }
+
+            if( !histoEndFound && ( histo[j] != 0) )
+            {
+                histoEnd      = j;
+                histoEndFound = true;
+            }
+
+            if( histoStartFound && histoEndFound ) { break; }
         }
 
         // speedup
@@ -164,7 +167,9 @@ namespace Ue5
         const int endX = input.cols - 1;
         const int endY = input.rows - 1;
         Directions direction;
-        uchar rInput, sobelx_val, sobely_val;
+
+        uchar rInput;
+        char sobelx_val, sobely_val;
 
         for( int x = 1; x < endX; x++ )
         {
@@ -191,7 +196,8 @@ namespace Ue5
                          || ( ( direction == Directions::DOWN45)
                               && ( ( rInput < input.at< uchar >( y + 1, x + 1 ) ) || ( rInput < input.at< uchar >( y - 1, x - 1 ) ) ) ) )
                 {
-                    input.at< uchar >( y, x ) = 0;
+                    input.at< uchar >( y, x )           = 0;
+                    image_direction.at< uchar >( y, x ) = (uchar) Directions::UNKNOWN;
                 }
                 else
                 {
@@ -333,7 +339,7 @@ namespace Ue5
 
         while( it_sS != it_sE )
         {
-            *it_sS = (int) hypot( ( *it_sX - 128 ), ( *it_sY - 128 ) );
+            *it_sS = (uchar) (hypot( (*it_sX - 128), (*it_sY - 128) ) * 1.5);
             it_sS++;
             it_sX++;
             it_sY++;
