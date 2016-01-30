@@ -179,7 +179,6 @@ namespace Ue5
                 sobelx_val = -128 + image_sobelX.at< uchar >( y, x );
                 sobely_val = -128 + image_sobelY.at< uchar >( y, x );
 
-
                 direction = getDirection( sobelx_val, sobely_val );
 
                 if( ( (sobelx_val == 0) && (sobely_val == 0) ) )
@@ -363,24 +362,35 @@ namespace Ue5
         Mat image_sobel( height, width, CV_8UC1, Scalar( 0 ) );
         Mat image_sobelX( height, width, CV_8UC1, Scalar( 0 ) );
         Mat image_sobelY( height, width, CV_8UC1, Scalar( 0 ) );
+        Mat image_nonMax( height, width, CV_8UC1, Scalar( 0 ) );
+        Mat image_histo( height, width, CV_8UC1, Scalar( 0 ) );
         Mat image_direction( height, width, CV_8UC1, Scalar( 0 ) );
+        Mat image_histo_direction( height, width, CV_8UC1, Scalar( 0 ) );
 
         cvtColor( image, image_gray, CV_BGR2GRAY );
         applyFilter( image_gray, image_gauss, &filter_gauss[0][0], 3, 3, 0, true );
 
         // generateSobel( image_gauss, image_sobel, image_sobelX, image_sobelY );
         generateSobel( image_gray, image_sobel, image_sobelX, image_sobelY );
-        nonMaxSuppression( image_sobel, image_direction, image_sobelX, image_sobelY );
 
-        auto threshold = ISOData( image_sobel );
-        binarize( image_sobel, image_direction, threshold );
+        image_nonMax = image_sobel.clone();
+        nonMaxSuppression( image_nonMax, image_direction, image_sobelX, image_sobelY );
+
+        image_histo           = image_nonMax.clone();
+        image_histo_direction = image_direction.clone();
+
+        auto threshold = ISOData( image_histo );
+        binarize( image_histo, image_histo_direction, threshold );
 
         // imshow( "Gray image", image_gray );
         // imshow( "Gauss image", image_gauss );
         // imshow( "SobelX image", image_sobelX );
         // imshow( "SobelY image", image_sobelY );
         // imshow( "Sobel image", image_sobel );
+        // imshow( "NonMax image", image_nonMax );
+        // imshow( "Histo image", image_histo );
         // imshow( "Direction image", image_direction );
+        // imshow( "Histo Direction image", image_histo_direction );
         // waitKey( 0 );
 
         // ------------------------------------
@@ -391,7 +401,7 @@ namespace Ue5
         int count_vertical   = 0;
         Directions d;
 
-        for( auto itS = image_direction.begin< uchar >(), itE = image_direction.end< uchar >(); itS != itE; itS++ )
+        for( auto itS = image_histo_direction.begin< uchar >(), itE = image_histo_direction.end< uchar >(); itS != itE; itS++ )
         {
             d = (Directions) * itS;
 
