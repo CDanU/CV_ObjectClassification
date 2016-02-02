@@ -19,25 +19,27 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Classification.h" />
     <ClInclude Include="..\src\Console.h" />
     <ClInclude Include="..\src\db.h" />
     <ClInclude Include="..\src\Feature.h" />
     <ClInclude Include="..\src\FeatureAverageColor.h" />
+    <ClInclude Include="..\src\FeatureEdges.h" />
     <ClInclude Include="..\src\FileSearch.h" />
     <ClInclude Include="..\src\includes.h" />
     <ClInclude Include="..\src\JsonFileTree.h" />
     <ClInclude Include="..\src\ShowImage.h" />
-    <ClInclude Include="..\src\Training.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Classification.cpp" />
     <ClCompile Include="..\src\Console.cpp" />
     <ClCompile Include="..\src\db.cpp" />
     <ClCompile Include="..\src\FeatureAverageColor.cpp" />
+    <ClCompile Include="..\src\FeatureEdges.cpp" />
     <ClCompile Include="..\src\FileSearch.cpp" />
     <ClCompile Include="..\src\JsonFileTree.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\ShowImage.cpp" />
-    <ClCompile Include="..\src\Training.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4790E22F-3D52-42AF-9F8B-2F9A709F56C1}</ProjectGuid>
