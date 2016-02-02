@@ -4,5 +4,8 @@
 
 namespace Ue5
 {
-    void console( std::string workpath );
+    void DoTraining( std::string workpath );
+    void DoClassify( std::string imagePath );
+    void Init( std::string appPath );
+    void Console();
 }
