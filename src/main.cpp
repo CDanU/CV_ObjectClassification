@@ -12,26 +12,24 @@ int  registerEvents();
 
 #include <iostream>
 
-#include "db.h"
 #include "Console.h"
-#include "Training.h"
 #include "Classification.h"
 #include "FeatureAverageColor.h"
+#include "FeatureEdges.h"
 
 #ifdef WIN32
     #include <Windows.h>
     #define REGISTER_SHUTDOWN_EVENT SetConsoleCtrlHandler( OnConsoleClose, TRUE );
-    BOOL WINAPI OnConsoleClose( DWORD dwCtrlType ){ OnExit(); return FALSE; }
+BOOL WINAPI OnConsoleClose( DWORD dwCtrlType ){ OnExit(); return FALSE; }
 #else
     #define REGISTER_SHUTDOWN_EVENT
 #endif
 
-
-using FeatureList = std::vector < std::unique_ptr< Ue5::Feature > >;
-
+using FeatureList = std::vector< std::unique_ptr< Ue5::Feature > >;
 
 const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
 Ue5::DB db;
+Ue5::Classification * classification = NULL;
 FeatureList featureList;
 // Register Events by initializing this integer
 const int _registerEvents = registerEvents();
@@ -40,7 +38,7 @@ const int _registerEvents = registerEvents();
 /* ShutDown Event */
 void OnExit()
 {
-    db.close(); // save & close db
+    if( classification ) { delete classification; classification = NULL; }    // save & close db
     featureList.clear();
 }
 
@@ -50,51 +48,57 @@ int registerEvents()
     return 0;
 }
 
-void init()
+void initFeatures()
 {
-    db.open( "storrage.json" );
-    //db.clear(); // reset db
-
     featureList.push_back( std::unique_ptr< Ue5::Feature >( new Ue5::FeatureAverageColor() ) );
+    featureList.push_back( std::unique_ptr< Ue5::Feature >( new Ue5::FeatureEdges() ) );
 }
 
-void training()
+void initClassify( std::string groupsConfigPath, std::vector< std::unique_ptr< Ue5::Feature > >& featureList )
 {
-    std::cout << "Start Training...\n";
-
-    Ue5::Training t( "images/50Objects/", featureList, db );
-
-    t.start();
+    initFeatures();
+    classification = new Ue5::Classification( featureList, groupsConfigPath );
 }
 
-static void classify( std::string imagePath, std::string groupsConfigPath, std::vector< std::unique_ptr< Ue5::Feature > >& featureList )
+void Ue5::Init( std::string appPath )
+{
+    std::cout << "Init...\n";
+
+    initClassify( "storage.json", featureList );
+    std::cout << "Init done.\n";
+}
+
+// classify single image
+void Ue5::DoClassify( std::string imagePath )
 {
     std::cout << "Start Classification...\n";
 
-    Ue5::Classification c( featureList, groupsConfigPath );
-
-    c.start( imagePath );
+    classification->start( imagePath );
+    std::cout << "Classification done.\n";
 }
 
+void Ue5::DoTraining( std::string workpath )
+{
+    std::cout << "Start Training...\n";
+
+    classification->training( workpath );
+    std::cout << "Training done.\n";
+}
 
 /* Main */
 int main()
 {
     try
     {
-        init();
-        // training();
-        classify( "images/50Objects/apple1_4.JPG", "storrage.json", featureList );
-        // console();
-        // db_test( db );
+        Ue5::Console();
     }
     catch( const std::exception& ex )
     {
         std::cout << ex.what();
+        std::cout << "Press any key to exit." << std::endl;
+        std::cin.ignore();
         exit( -1 );
     }
-
-    std::cin.ignore();
 
     return 0;
 }
