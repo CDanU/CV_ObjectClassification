@@ -34,15 +34,15 @@ void Ue5::Console()
 
         if( cmd == "help" )
         {
-            cout << endl << "[ Commands ]" << endl << endl <<
-                "help              : this info" << endl <<
-                "dir               : shows current working directory" << endl <<
-                "cd ('path')       : sets working directory ('#reset' resets to default)" << endl <<
-                "ls, list          : list images in current working directory" << endl <<
-                "show (0..9..)     : displays an image given in list" << endl <<
-                "training          : start Training for Classification" << endl <<
-                "classify (0..9..) : start Classification for an image given in list" << endl <<
-                "(q)uit, exit      : exit program" << endl;
+            cout << endl << "[ Commands ]" << endl << endl
+                 << "help              : this info" << endl
+                 << "dir               : shows current working directory" << endl
+                 << "cd ('path')       : sets working directory ('#reset' resets to default)" << endl
+                 << "ls, list          : list images in current working directory" << endl
+                 << "show (0..9..)     : displays an image given in list" << endl
+                 << "training          : start Training for Classification" << endl
+                 << "classify (0..9..) : start Classification for an image given in list" << endl
+                 << "(q)uit, exit      : exit program" << endl;
         }
         else if( cmd == "dir" )
         {
@@ -68,7 +68,7 @@ void Ue5::Console()
         else if( ( cmd == "ls") || ( cmd == "list") )
         {
             if( !files.empty() ) { files.clear(); }
-            Ue5::fileSearch( files, imgpath, "*.jpg" );
+            Ue5::search( files, imgpath, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
             cout << "List Files:\n";
             unsigned int count = 0;

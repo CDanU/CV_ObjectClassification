@@ -73,23 +73,6 @@ namespace Ue5
         printMapSortedByVal( groupSimilarityCount );
     }
 
-    vector< string > match( string search, string regeStr )
-    {
-        vector< string > list;
-        smatch match;
-
-        if( std::regex_match( search, match, std::regex( regeStr ) ) )
-        {
-            for( size_t i = 0; i < match.size(); ++i )
-            {
-                ssub_match sub_match = match[i];
-                string piece         = sub_match.str();
-                list.push_back( piece );
-            }
-        }
-        return list;
-    }
-
     void Classification::training( string imagesDir )
     {
         const string regexString = "^(.[^_]+).*$";
@@ -97,12 +80,15 @@ namespace Ue5
         map< string, vector< string > > groupFilesMap;
 
         vector< string > files;
-        fileSearch( files, imagesDir, "*.jpg" );
+        vector< string > list;
+
+        search( files, imagesDir, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
         // sort files int groups inside groupFilesMap
         for( auto& file : files )
         {
-            auto list = match( file, regexString );
+            list.clear();
+            match( list, file, regexString, true, true );
             if( list.size() == 0 ) { continue; }
             // .................................................................
 
@@ -141,7 +127,7 @@ namespace Ue5
                 {
                     cv::Mat img = cv::imread( imagesDir + fileName );
                     feature->accumulate( img );
-                    cout << "Feature '" << feature->getFilterName() << "' applied to " << fileName << endl;
+                    cout << "Group: " << e.first << ", Feature '" << feature->getFilterName() << "' applied to " << fileName << endl;
                 }
 
                 // add accumulated values to ptree
