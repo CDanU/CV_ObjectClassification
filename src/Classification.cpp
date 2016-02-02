@@ -1,26 +1,29 @@
 #include "Classification.h"
+#include "FileSearch.h"
 
 #include <map>
 #include <vector>
 #include <iostream>
 #include <clocale> // for stod . separator
+#include <regex>
+#include <string>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-
 
 namespace Ue5
 {
     using namespace cv;
     using namespace std;
 
-
     template< typename T, typename U >
     void Classification::printMapSortedByVal( map< T, U >& m )
     {
-        vector< pair< T, U > > sortedVec( m.begin(), m.end() );
+        using PairValue = pair< T, U >;
 
-        sort( sortedVec.begin(), sortedVec.end(), []( auto& left, auto& right ){
+        vector< PairValue > sortedVec( m.begin(), m.end() );
+
+        sort( sortedVec.begin(), sortedVec.end(), []( PairValue& left, PairValue& right ){
             return left.second > right.second;
         } );
 
@@ -50,6 +53,8 @@ namespace Ue5
 
                 auto featureGroup = group.second.find( feature->getFilterName() );
 
+                if( ( featureGroup == group.second.not_found() ) || !featureGroup->second.empty() ) { continue; }
+
                 groupFeature.reserve( featureGroup->second.size() );
 
                 for( auto entry : featureGroup->second )
@@ -68,20 +73,103 @@ namespace Ue5
         printMapSortedByVal( groupSimilarityCount );
     }
 
+    vector< string > match( string search, string regeStr )
+    {
+        vector< string > list;
+        smatch match;
+
+        if( std::regex_match( search, match, std::regex( regeStr ) ) )
+        {
+            for( size_t i = 0; i < match.size(); ++i )
+            {
+                ssub_match sub_match = match[i];
+                string piece         = sub_match.str();
+                list.push_back( piece );
+            }
+        }
+        return list;
+    }
+
+    void Classification::training( string imagesDir )
+    {
+        const string regexString = "^(.[^_]+).*$";
+
+        map< string, vector< string > > groupFilesMap;
+
+        vector< string > files;
+        fileSearch( files, imagesDir, "*.jpg" );
+
+        // sort files int groups inside groupFilesMap
+        for( auto& file : files )
+        {
+            auto list = match( file, regexString );
+            if( list.size() == 0 ) { continue; }
+            // .................................................................
+
+            auto name = list[1];
+            transform( name.begin(), name.end(), name.begin(), ::tolower );
+
+            if( groupFilesMap.find( name ) == groupFilesMap.end() ) { groupFilesMap[name] = vector< string >(); }
+
+            groupFilesMap[name].push_back( file );
+        }
+
+        // write settings in json file
+        auto & root = db->source.getRoot();
+        for( auto& e : groupFilesMap )
+        {
+            if( e.first.empty() ) { continue; }
+            // ..................................................................
+
+            ptree groupGroup;
+
+            ptree fileGroup;
+            for( auto& file : e.second )
+            {
+                ptree fileName;
+                fileName.put( "", file );
+                fileGroup.push_back( std::make_pair( "", fileName ) );
+            }
+
+            groupGroup.push_back( std::make_pair( "files", fileGroup ) );
+
+
+            for( auto& feature : featureList )
+            {
+                // accumulate features of groups files
+                for( auto& fileName : e.second )
+                {
+                    cv::Mat img = cv::imread( imagesDir + fileName );
+                    feature->accumulate( img );
+                    cout << "Feature '" << feature->getFilterName() << "' applied to " << fileName << endl;
+                }
+
+                // add accumulated values to ptree
+                ptree featureGroup;
+                for( auto featureVal : feature->getNormedAccumulate() )
+                {
+                    ptree featureValEntry;
+                    featureValEntry.put( "", featureVal );
+                    featureGroup.push_back( std::make_pair( "", featureValEntry ) );
+                }
+
+                groupGroup.push_back( std::make_pair( feature->getFilterName(), featureGroup ) );
+
+                feature->clearAccu();
+            }
+
+            root.push_back( std::make_pair( e.first, groupGroup ) );
+        }
+
+        db->save();
+    }
+
     Classification::Classification( const FeatureList& _featureList, string groupsConfigPath )
         : featureList( _featureList ), deleteDB( true )
     {
-        const auto featuresCount = featureList.size();
-
         db = new DB();
 
         db->open( groupsConfigPath );
-    }
-
-    Classification::Classification( const FeatureList& _featureList, DB& _db )
-        : featureList( _featureList ), deleteDB( false )
-    {
-        db = std::addressof( _db );
     }
 
     Classification::~Classification()

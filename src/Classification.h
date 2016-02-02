@@ -1,13 +1,10 @@
 #pragma once
 
-
 #include <string>
 #include <map>
 
 #include "db.h"
 #include "Feature.h"
-
-
 
 namespace Ue5
 {
@@ -21,14 +18,13 @@ namespace Ue5
             const bool deleteDB;
 
         public:
-            template <typename T, typename U>
-            static void printMapSortedByVal( std::map<T,U>& m );
+            template< typename T, typename U >
+            static void printMapSortedByVal( std::map< T, U >& m );
 
             void start( std::string imagePath );
+            void training( std::string imagesDir );
 
             Classification( const FeatureList& featureList, std::string groupsConfigPath );
-            Classification( const FeatureList& featureList, DB& db );
-
             virtual ~Classification();
     };
 }
