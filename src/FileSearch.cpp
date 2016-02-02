@@ -4,8 +4,14 @@
 #include <algorithm>
 #include <errno.h>
 #include <stdio.h>
+#include <vector>
+#include <regex>
+#include <string>
 
-std::string Ue5::getCurrentPath()
+using namespace std::regex_constants;
+using namespace std;
+
+string Ue5::getCurrentPath()
 {
     using namespace std;
 
@@ -13,25 +19,43 @@ std::string Ue5::getCurrentPath()
 
     if( !GetCurrentDir( cCurrentPath, sizeof(cCurrentPath) ) )
     {
-        std::cerr << "GetCurrentDir failed with " << errno << std::endl;
+        cerr << "GetCurrentDir failed with " << errno << endl;
         return "";
     }
 
     cCurrentPath[sizeof(cCurrentPath) - 1] = '\0';     /* not really required */
 
-    std::string path( cCurrentPath );
-    std::replace( path.begin(), path.end(), '\\', '/' );
+    string path( cCurrentPath );
+    replace( path.begin(), path.end(), '\\', '/' );
     path += "/";
-
-    printf( "The current working directory is \"%s\"\n", path.c_str() );
 
     return path;
 }
 
-void Ue5::fileSearch( std::vector< std::string >& files, std::string path, std::string filter = "*.*" )
+void Ue5::match( vector< string >& list, string search, string regexStr, bool ignoreCase, bool split )
 {
-    printf( "Search for %s in \"%s\"\n", filter.c_str(), path.c_str() );
+    smatch match;
 
+    if( regex_match( search, match, regex( regexStr, ECMAScript | (ignoreCase ? icase : ECMAScript) ) ) )
+    {
+        if( match.empty() ) { return; }
+
+        if( !split ) { list.push_back( match[0] ); }
+
+        else
+        {
+            for( size_t i = 0; i < match.size(); ++i )
+            {
+                ssub_match sub_match = match[i];
+                string piece         = sub_match.str();
+                list.push_back( piece );
+            }
+        }
+    }
+}
+
+void Ue5::search( vector< string >& files, string path, string regexStr = ".*" )
+{
     DIR * dir = opendir( path.c_str() );
 
     if( dir == NULL )
@@ -40,33 +64,19 @@ void Ue5::fileSearch( std::vector< std::string >& files, std::string path, std::
         return;
     }
 
-    std::transform( filter.begin(), filter.end(), filter.begin(), ::tolower );
-
     struct dirent * ent;
-    bool allTypes = false;
-    std::string filterType;
-    std::size_t pos = filter.find( "." );
 
-    if( pos != std::string::npos )
-    {
-        filterType = filter.substr( pos + 1 );
-        allTypes   = (filterType[0] == '*');
-    }
-
-    std::string name;
-    std::string type;
+#ifdef WIN32
+    auto isFile = 0x8000;
+#else
+    auto isFile = 0x8;
+#endif
 
     while( ( ent = readdir( dir ) ) != NULL )
     {
-        name = ent->d_name;
-        pos  = name.find( "." );
-        type = (pos == std::string::npos) ? "?" : name.substr( pos + 1 );
-
-        transform( type.begin(), type.end(), type.begin(), tolower );
-
-        if( ( filter.compare( name ) == 0) || allTypes || ( filterType.compare( type ) == 0) )
+        if( ent->d_type == isFile )
         {
-            files.push_back( std::string( ent->d_name ) );
+            match( files, string( ent->d_name ), regexStr, true );
         }
     }
 
