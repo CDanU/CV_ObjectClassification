@@ -196,7 +196,7 @@ namespace Ue5
         auto maxGroups = root.size();
         auto maxTotal  = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
 
-        Mat1d mat( maxTotal + 3, maxGroups + 1, double(0) );
+        Mat1d mat( maxTotal + 1, maxGroups, double(0) );
 
         int r = 0;
         for( auto& group : root )
@@ -241,12 +241,26 @@ namespace Ue5
 
         // matrix output
 
-        int rows = mat.rows - 1;
-        int cols = mat.cols - 1;
+        int rows = maxTotal + 2;
+        int cols = maxGroups;
 
         const int CELL_LENGTH = 20;
         auto length           = 0;
         string cell           = "";
+
+        for( auto row = 0; row < mat.rows; ++row )
+        {
+            for( auto col = 0; col < mat.cols; ++col )
+            {
+                if( row < mat.rows - 1 )
+                {
+                    auto val = mat.at< double >( row, col );
+                    if( val == maxValues[row] ) { continue; }
+                    mat.at< double >( mat.rows - 1, col ) += val;
+                }
+                else { mat.at< double >( row, col ) /= mat.rows - 2; }
+            }
+        }
 
         for( auto row = -1; row < rows; ++row )
         {
@@ -273,14 +287,15 @@ namespace Ue5
 
                         if( rowTitle[row] == "Error Rate" )
                         {
-                            for( auto err_row = 0; err_row < maxValues.size(); ++err_row )
-                            {
-                                auto err_val = mat.at< double >( err_row, col );
+                            // for (auto err_row = 0; err_row < maxValues.size(); ++err_row)
+                            // {
+                            // auto err_val = mat.at<double>(err_row, col);
 
-                                if( err_val == maxValues[err_row] ) { continue; }
-                                val += int( round( err_val * 100 ) );
-                            }
-
+                            // if (err_val == maxValues[err_row]) continue;
+                            // val += int(round(err_val * 100));
+                            // }
+                            auto dval = mat.at< double >( row, col );
+                            val  = int( round( (dval) * 100 ) );
                             cell = to_string( val );
                         }
                         else if( rowTitle[row] == "Mean Rank" )
@@ -290,7 +305,7 @@ namespace Ue5
                         else if( row < maxValues.size() )
                         {
                             auto dval = mat.at< double >( row, col );
-                            val  = int( round( dval * 100 ) );
+                            val  = int( round( (dval) * 100 ) );                        /// mat.at<double>(mat.rows - 1, col)
                             cell = to_string( val );
                             if( dval == maxValues[row] ) { cell += " MAX"; }
                         }
