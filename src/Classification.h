@@ -15,13 +15,19 @@ namespace Ue5
         private:
             const FeatureList & featureList;
             DB * db;
+            std::string picturePath;
 
         public:
             template< typename T, typename U >
-            static void printMapSortedByVal( std::map< T, U >& m );
+            static void printMapSortedByVal( std::ostream& out, std::map< T, U >& m );
+
+            template< typename T >
+            double parse( T& matrix, int row, std::string img );
 
             void start( std::string imagePath );
-            void training( std::string imagesDir );
+            void training();
+            void showMatrix( std::size_t maxFiles = -1 );
+            void setPicturePath( std::string picturePath );
 
             Classification( const FeatureList& featureList, std::string groupsConfigPath );
             virtual ~Classification();
