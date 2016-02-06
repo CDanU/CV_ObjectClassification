@@ -165,7 +165,7 @@ namespace Ue5
     }
 
     Classification::Classification( const FeatureList& _featureList, string groupsConfigPath )
-        : featureList( _featureList ), deleteDB( true )
+        : featureList( _featureList )
     {
         db = new DB();
 
@@ -174,6 +174,6 @@ namespace Ue5
 
     Classification::~Classification()
     {
-        if( deleteDB ) { delete db; }
+        delete db;
     }
 }
