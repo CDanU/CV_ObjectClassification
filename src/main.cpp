@@ -81,8 +81,17 @@ void Ue5::DoTraining( std::string workpath )
 {
     std::cout << "Start Training...\n";
 
-    classification->training( workpath );
+    classification->setPicturePath( workpath );
+    classification->training();
     std::cout << "Training done.\n";
+}
+
+void Ue5::ShowMatrix( std::string workpath )
+{
+    std::cout << "Show Classification Matrix.\n";
+
+    classification->setPicturePath( workpath );
+    classification->showMatrix( 3 );
 }
 
 /* Main */

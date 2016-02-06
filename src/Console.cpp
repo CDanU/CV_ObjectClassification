@@ -181,7 +181,8 @@ void Ue5::Console()
         },
         {
             "matrix", [&]( string input ){
-                return Nothing;
+                ShowMatrix( imgpath );
+                return Valid;
             }
         }
     };
