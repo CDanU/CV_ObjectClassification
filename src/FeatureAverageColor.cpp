@@ -18,23 +18,71 @@ namespace Ue5
 {
 // =============================================================================
 
+    void FeatureAverageColor::rgb2lab( const double _RGB[3], float lab[3] )
+    {
+        // http://www.f4.fhtw-berlin.de/~barthel/ImageJ/ColorInspector/HTMLHelp/farbraumJava.htm
+        const float xyzRef[3] = { 0.964221, 1.0, 0.825211 };  // reference white D50
+        const float eps       = 216 / 24389.0;
+        const float k         = 24389 / 27.0;
+        float rgb[3], xyz[3];
+
+        // RGB to XYZ
+        rgb[0] = _RGB[0] / 255;
+        rgb[1] = _RGB[1] / 255;
+        rgb[2] = _RGB[2] / 255;
+
+        // assuming sRGB (D65)
+        for( int i = 0; i < 3; i++ )
+        {
+            if( rgb[i] <= 0.04045 ) { rgb[i] /= 12; }
+            else { rgb[i] = pow( ( rgb[i] + 0.055) / 1.055, 2.4 ); }
+        }
+
+        xyz[0] = (0.436052025 * rgb[0] + 0.385081593 * rgb[1] + 0.143087414 * rgb[2]) / xyzRef[0];
+        xyz[1] = (0.222491598 * rgb[0] + 0.716886060 * rgb[1] + 0.060621486 * rgb[2]) / xyzRef[1];
+        xyz[2] = (0.013929122 * rgb[0] + 0.097097002 * rgb[1] + 0.714185470 * rgb[2]) / xyzRef[2];
+
+        // XYZ to Lab
+        for( int i = 0; i < 3; i++ )
+        {
+            if( xyz[i] > eps ) { xyz[i] = pow( xyz[i], 0.333333333 ); }
+            else { xyz[i] = ( k * xyz[i] + 16 ) / 116.0; }
+        }
+
+        lab[0] = ( 116 * xyz[1] ) - 16;
+        lab[1] = 500 * (xyz[0] - xyz[1]);
+        lab[2] = 200 * (xyz[1] - xyz[2]);
+
+        lab[0] = (int) ( 2.55 * lab[0] + 0.5);
+        lab[1] = (int) ( lab[1] + 0.5 );
+        lab[2] = (int) ( lab[2] + 0.5 );
+    }
+
     string FeatureAverageColor::getFilterName(){ return "AverageColor"; }
 
     double FeatureAverageColor::compare( FeatureValue a, FeatureValue b )
     {
-        double ret = 0;
-
         if( (a.size() != 3) || (b.size() != 3) )
         {
-            cerr << "Wrong amount of parameter: should be 3, is: a(" << a.size() << ") | b(" << b.size() << ")" << endl;
+            cerr << "Wrong amount of parameters: should be 3, is: a(" << a.size() << ") | b(" << b.size() << ")" << endl;
             return 0;
         }
+        float aLAB[3], bLAB[3];
 
-        ret += 1 - abs( a[0] - b[0] ) / 255;
-        ret += 1 - abs( a[1] - b[1] ) / 255;
-        ret += 1 - abs( a[2] - b[2] ) / 255;
+        rgb2lab( a.data(), aLAB );
+        rgb2lab( b.data(), bLAB );
 
-        return ret / 3;
+        /*
+        cout << "A rgb| r: " << a[0] << " lab| L: " << aLAB[0] << endl
+             << "     | g: " << a[1] << "    | a: " << aLAB[1] << endl
+             << "     | b: " << a[2] << "    | b: " << aLAB[2] << endl;
+
+        cout << "B rgb| r: " << b[0] << " lab| L: " << bLAB[0] << endl
+             << "     | g: " << b[1] << "    | a: " << bLAB[1] << endl
+             << "     | b: " << b[2] << "    | b: " << bLAB[2] << endl << endl;
+        // */
+
+        return 1 - sqrt( pow( aLAB[0] - bLAB[0], 2 ) + pow( aLAB[1] - bLAB[1], 2 ) + pow( aLAB[2] - bLAB[2], 2 ) ) / 255.0;
     }
 
     // *
@@ -69,7 +117,7 @@ namespace Ue5
 
         n = 0;
 
-        const auto width = _image.cols();
+        const auto width  = _image.cols();
         const auto height = _image.rows();
 
 
@@ -86,7 +134,7 @@ namespace Ue5
                     int fy = y + dy;
                     if( (fy < 0) || (fy >= height) ) { continue; }
 
-                    Pixel ptr = image.at< Pixel >( fy , fx );
+                    Pixel ptr = image.at< Pixel >( fy, fx );
                     b += ptr.x;
                     g += ptr.y;
                     r += ptr.z;
@@ -94,15 +142,11 @@ namespace Ue5
                     n++;
                 }
             }
-
         }
 
         ret.push_back( r / (n * 1.0) );
         ret.push_back( g / (n * 1.0) );
         ret.push_back( b / (n * 1.0) );
-
-        // cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
-
 
         return ret;
     }
