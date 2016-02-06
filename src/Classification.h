@@ -15,7 +15,6 @@ namespace Ue5
         private:
             const FeatureList & featureList;
             DB * db;
-            const bool deleteDB;
 
         public:
             template< typename T, typename U >
