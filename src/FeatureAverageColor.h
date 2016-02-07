@@ -28,5 +28,10 @@ namespace Ue5
 
             FeatureAverageColor();
             ~FeatureAverageColor();
+
+            // =================================================================
+            FeatureType getFeatureType();
+            double      compare( FeatureMat grp, cv::InputArray image );
+            FeatureMat  getNormedAccumulateMat();
     };
 }

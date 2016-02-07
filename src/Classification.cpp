@@ -1,5 +1,6 @@
 #include "Classification.h"
 #include "FileSearch.h"
+#include "Feature.h"
 
 #include <map>
 #include <vector>
@@ -43,42 +44,81 @@ namespace Ue5
     template< >
     double Classification::parse< Mat >( Mat& matrix, int col, string imagePath )
     {
-        Mat img    = imread( imagePath );
-        ptree root = db->source.getRoot();
+        const Mat img = imread( imagePath );
+        ptree root    = db->source.getRoot();
         FeatureValue imageFeature;
         FeatureValue groupFeature;
+        FeatureMat groupFeatureMat;
 
         map< string, double > groupSimilarityCount;
 
+        int row    = 0, targetRow = 0;
         double max = 0;
 
-        int row       = 0;
-        int targetRow = 0;
         for( auto& group : root )
         {
             groupSimilarityCount.insert( make_pair( group.first, 0 ) );
-
             auto & value = groupSimilarityCount.at( group.first );
 
             for( auto& feature : featureList )
             {
-                groupFeature.clear();
-                imageFeature = feature->calculate( img );
+                auto featureJSONGrp = group.second.find( feature->getFilterName() );
+                if( ( featureJSONGrp == group.second.not_found() ) || featureJSONGrp->second.empty() )
+                { continue; }
+                // -------------------------------------------------------------
 
-                auto featureGroup = group.second.find( feature->getFilterName() );
-
-                if( ( featureGroup == group.second.not_found() ) || featureGroup->second.empty() ) { continue; }
-
-                groupFeature.reserve( featureGroup->second.size() );
-
-                for( auto entry : featureGroup->second )
+                const auto fType = feature->getFeatureType();
+                if( fType == Feature::Simple )
                 {
-                    groupFeature.push_back( entry.second.get_value( 0.0 ) );
+                    imageFeature = feature->calculate( img );
+
+                    groupFeature.clear();
+                    groupFeature.reserve( featureJSONGrp->second.size() );
+                    for( auto entry : featureJSONGrp->second )
+                    {
+                        groupFeature.push_back( entry.second.get_value( 0.0 ) );
+                    }
+
+                    value += feature->compare( groupFeature, imageFeature );
                 }
+                else if( fType == Feature::Descriptor )
+                {
+                    int descWidth     = featureJSONGrp->second.get( "width", -1 );
+                    int descHeight    = featureJSONGrp->second.get( "heigt", -1 );
+                    int descType      = featureJSONGrp->second.get( "type", -1 );
+                    ptree matsJSONGrp = featureJSONGrp->second.get_child( "mats", ptree() );
 
-                auto v = feature->compare( groupFeature, imageFeature );
+                    if( (descWidth < 1) || (descHeight < 1) || (descType == -1) || matsJSONGrp.empty() )
+                    {
+                        cout << "parse error: " << feature->getFilterName() << endl;
+                        continue;
+                    }
+                    // ---------------------------------------------------------
 
-                value += v;
+                    // loead desctiptors into a FeatureMat
+                    groupFeatureMat.clear();
+                    groupFeatureMat.reserve( matsJSONGrp.size() );
+                    for( auto entry : matsJSONGrp )
+                    {
+                        Mat desc( descWidth, descHeight, descType );
+                        const auto itE = desc.end< uchar >();
+                        auto it        = desc.begin< uchar >();
+
+                        for( auto val : entry.second )
+                        {
+                            *it = val.second.get_value( 0 );
+                            if( it == itE ) { break; }
+                            it++;
+                        }
+
+                        if( it != itE ) { continue; }
+                        // -----------------------------------------------------
+
+                        groupFeatureMat.push_back( desc );
+                    }
+
+                    value += feature->compare( groupFeatureMat, img );
+                }
 
                 feature->clearAccu();
             }
@@ -90,14 +130,12 @@ namespace Ue5
                 max       = value;
                 targetRow = row;
             }
-
             ++row;
         }
 
-        matrix.at< double >( targetRow, col ) += max;
-
         // printMapSortedByVal(out, groupSimilarityCount);
 
+        matrix.at< double >( targetRow, col ) += max;
         return max;
     }
 
@@ -105,6 +143,7 @@ namespace Ue5
     {
         db->clear();
 
+        // filters group name from file name
         const string regexString = "^(.[^_]+).*$";
 
         map< string, vector< string > > groupFilesMap;
@@ -112,11 +151,13 @@ namespace Ue5
         vector< string > files;
         vector< string > list;
 
+        // adds found files into files vec
         search( files, picturePath, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
-        // sort files int groups inside groupFilesMap
+        // sort files into groups inside groupFilesMap
         for( auto& file : files )
         {
+            // list contains matched regex pattern groups
             list.clear();
             match( list, file, regexString, true, true );
             if( list.size() == 0 ) { continue; }
@@ -153,9 +194,12 @@ namespace Ue5
 
             for( auto& feature : featureList )
             {
+                const auto fType = feature->getFeatureType();
+
                 // accumulate features of groups files
                 for( auto& fileName : e.second )
                 {
+                    // TODO: move out
                     cv::Mat img = cv::imread( picturePath + fileName );
                     feature->accumulate( img );
                     cout << "Group: " << e.first << ", Feature '" << feature->getFilterName() << "' applied to " << fileName << endl;
@@ -163,13 +207,46 @@ namespace Ue5
 
                 // add accumulated values to ptree
                 ptree featureGroup;
-                for( auto featureVal : feature->getNormedAccumulate() )
-                {
-                    ptree featureValEntry;
-                    featureValEntry.put( "", featureVal );
-                    featureGroup.push_back( std::make_pair( "", featureValEntry ) );
-                }
 
+                if( fType == Feature::Simple )
+                {
+                    for( auto featureVal : feature->getNormedAccumulate() )
+                    {
+                        ptree featureValEntry;
+                        featureValEntry.put( "", featureVal );
+                        featureGroup.push_back( std::make_pair( "", featureValEntry ) );
+                    }
+                }
+                else if( fType == Feature::Descriptor )
+                {
+                    ptree fMatEntryWidth, fMatEntryHeight, fMatEntryType, fMatEntryMats;
+                    FeatureMat fm = feature->getNormedAccumulateMat();
+                    if( fm.empty() ) { continue; }
+                    // ----------------------------------------------------------
+
+                    for( auto featureMat : fm )
+                    {
+                        ptree fMatEntryMatsMat;
+                        for( auto itS = featureMat.begin< uchar >(), itE = featureMat.end< uchar >(); itS != itE; itS++ )
+                        {
+                            ptree fMatEntryMatsMatData;
+                            fMatEntryMatsMatData.put( "", *itS );
+                            fMatEntryMatsMat.push_back( std::make_pair( "", fMatEntryMatsMatData ) );
+                        }
+
+                        fMatEntryMats.push_back( std::make_pair( "", fMatEntryMatsMat ) );
+                    }
+
+                    fMatEntryWidth.put( "", fm[0].cols );
+                    fMatEntryHeight.put( "", fm[0].rows );
+                    fMatEntryType.put( "", fm[0].type() );
+
+
+                    featureGroup.push_back( std::make_pair( "width", fMatEntryWidth ) );
+                    featureGroup.push_back( std::make_pair( "height", fMatEntryHeight ) );
+                    featureGroup.push_back( std::make_pair( "type", fMatEntryType ) );
+                    featureGroup.push_back( std::make_pair( "mats", fMatEntryMats ) );
+                }
                 groupGroup.push_back( std::make_pair( feature->getFilterName(), featureGroup ) );
 
                 feature->clearAccu();
