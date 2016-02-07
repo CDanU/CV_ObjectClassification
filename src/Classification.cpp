@@ -39,7 +39,7 @@ namespace Ue5
     }
 
     template< >
-    double Classification::parse< Mat >( Mat& matrix, int row, string imagePath )
+    double Classification::parse< Mat >( Mat& matrix, int col, string imagePath )
     {
         Mat img    = imread( imagePath );
         ptree root = db->source.getRoot();
@@ -50,7 +50,8 @@ namespace Ue5
 
         double max = 0;
 
-        int col = 0;
+        int row       = 0;
+        int targetRow = 0;
         for( auto& group : root )
         {
             groupSimilarityCount.insert( make_pair( group.first, 0 ) );
@@ -82,11 +83,16 @@ namespace Ue5
 
             value /= featureList.size();
 
-            if( value > max ) { max = value; }
+            if( value > max )
+            {
+                max       = value;
+                targetRow = row;
+            }
 
-            matrix.at< double >( row, col ) = value;
-            ++col;
+            ++row;
         }
+
+        matrix.at< double >( targetRow, col ) += max;
 
         // printMapSortedByVal(out, groupSimilarityCount);
 
@@ -171,7 +177,7 @@ namespace Ue5
         db->save();
     }
 
-    void Classification::showMatrix( size_t maxFiles )
+    void Classification::showMatrix()
     {
         ofstream matFile( "matrix.txt" );
 
@@ -188,25 +194,31 @@ namespace Ue5
 
         vector< string > colTitle;
         vector< string > rowTitle;
+        vector< int > colCellLength;
+
         vector< double > maxValues;
         vector< double > errorRate;
 
         colTitle.push_back( "Picture / Group" );
+        colCellLength.push_back( ( *(colTitle.end() - 1) ).length() );
 
         auto maxGroups = root.size();
-        auto maxTotal  = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
+        // auto maxTotal = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
 
-        Mat1d mat( maxTotal + 1, maxGroups, double(0) );
+        Mat1d mat( maxGroups + 3, maxGroups, double(0) );
 
-        int r = 0;
         for( auto& group : root )
         {
             colTitle.push_back( group.first );
+            rowTitle.push_back( group.first );
+            colCellLength.push_back( group.first.length() );
+        }
 
+        int col = 0;
+        for( auto& group : root )
+        {
             for( auto& feature : group.second )
             {
-                if( r >= maxTotal ) { break; }
-
                 if( feature.first != "files" ) { continue; }
 
                 for( auto& fileC : feature.second )
@@ -214,26 +226,27 @@ namespace Ue5
                     auto file = fileC.second.data();
                     if( file.empty() ) { continue; }
 
-                    rowTitle.push_back( file );
-                    maxValues.push_back( parse< Mat >( mat, r, picturePath + file ) );
-                    break;
+                    parse< Mat >( mat, col, picturePath + file );
                 }
 
                 break;
             }
 
-            if( r <= maxTotal )
+            for( int r = 0; r < maxGroups; ++r )
             {
-                // progress bar
-                // -----------------------
-                int progress = int( ( r / double(maxTotal) ) * 100 );
-                cout << "\r";                 // go to first char in line
-                auto bar = string( int( (progress / 100.f) * 20 ), '=' );
-                cout << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%";
-                // -----------------------
+                mat[maxGroups + 2][col] += mat[r][col];
+                if( r != col ) { mat[maxGroups][col] += mat[r][col]; }
             }
 
-            ++r;
+            ++col;
+
+            // progress bar
+            // -----------------------
+            int progress = int( ( (col) / double(maxGroups) ) * 100 );
+            cout << "\r";             // go to first char in line
+            auto bar = string( int( (progress / 100.f) * 20 ), '=' );
+            cout << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%";
+            // -----------------------
         }
 
         rowTitle.push_back( "Error Rate" );
@@ -241,34 +254,22 @@ namespace Ue5
 
         // matrix output
 
-        int rows = maxTotal + 2;
+        int rows = maxGroups + 2;
         int cols = maxGroups;
 
-        const int CELL_LENGTH = 20;
-        auto length           = 0;
-        string cell           = "";
-
-        for( auto row = 0; row < mat.rows; ++row )
-        {
-            for( auto col = 0; col < mat.cols; ++col )
-            {
-                if( row < mat.rows - 1 )
-                {
-                    auto val = mat.at< double >( row, col );
-                    if( val == maxValues[row] ) { continue; }
-                    mat.at< double >( mat.rows - 1, col ) += val;
-                }
-                else { mat.at< double >( row, col ) /= mat.rows - 2; }
-            }
-        }
+        auto length = 0;
+        string cell = "";
 
         for( auto row = -1; row < rows; ++row )
         {
             for( auto col = -1; col < cols; ++col )
             {
+                auto CELL_LENGTH = colCellLength[col + 1];
+
                 if( row == -1 )
                 {
                     cell = (col + 1) < colTitle.size() ? colTitle[col + 1] : "?";
+
                     string msg = (col > -1 ? " | " : "") + cell + string( CELL_LENGTH - cell.length(), ' ' );
                     length += msg.length();
                     matFile << msg;
@@ -282,32 +283,21 @@ namespace Ue5
                     }
                     else if( col >= 0 )
                     {
-                        auto val = 0;
-                        cell = "?";
+                        cell = "";
 
                         if( rowTitle[row] == "Error Rate" )
                         {
-                            // for (auto err_row = 0; err_row < maxValues.size(); ++err_row)
-                            // {
-                            // auto err_val = mat.at<double>(err_row, col);
-
-                            // if (err_val == maxValues[err_row]) continue;
-                            // val += int(round(err_val * 100));
-                            // }
-                            auto dval = mat.at< double >( row, col );
-                            val  = int( round( (dval) * 100 ) );
-                            cell = to_string( val );
+                            auto dval = (mat.at< double >( row, col ) / mat[maxGroups + 2][col]) * 100;
+                            cell = to_string( int( round( dval ) ) );
                         }
                         else if( rowTitle[row] == "Mean Rank" )
                         {
                             // TODO
                         }
-                        else if( row < maxValues.size() )
+                        else if( row < maxGroups )
                         {
-                            auto dval = mat.at< double >( row, col );
-                            val  = int( round( (dval) * 100 ) );                        /// mat.at<double>(mat.rows - 1, col)
-                            cell = to_string( val );
-                            if( dval == maxValues[row] ) { cell += " MAX"; }
+                            auto dval = (mat.at< double >( row, col ) / mat[maxGroups + 2][col]) * 100;
+                            cell = to_string( int( round( dval ) ) );
                         }
 
                         matFile << " | " + cell + string( CELL_LENGTH - cell.length(), ' ' );
@@ -315,7 +305,7 @@ namespace Ue5
                 }
             }
 
-            if( ( row == -1) || ( row == (maxTotal - 1) ) ) { matFile << endl << string( length, '-' ) << endl; }
+            if( ( row == -1) || ( row == (maxGroups - 1) ) ) { matFile << endl << string( length, '-' ) << endl; }
             else { matFile << endl; }
         }
 

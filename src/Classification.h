@@ -26,7 +26,7 @@ namespace Ue5
 
             void start( std::string imagePath );
             void training();
-            void showMatrix( std::size_t maxFiles = -1 );
+            void showMatrix();
             void setPicturePath( std::string picturePath );
 
             Classification( const FeatureList& featureList, std::string groupsConfigPath );
