@@ -91,7 +91,7 @@ void Ue5::ShowMatrix( std::string workpath )
     std::cout << "Show Classification Matrix.\n";
 
     classification->setPicturePath( workpath );
-    classification->showMatrix( 3 );
+    classification->showMatrix();
 }
 
 /* Main */
