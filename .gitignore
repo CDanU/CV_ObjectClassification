@@ -2,6 +2,7 @@ compileSetup.sh
 *.patch
 *.json
 *.orig
+*.txt
 
 # visual studio
 *.opensdf
