@@ -7,18 +7,19 @@
 using namespace cv;
 using namespace std;
 
-using Pixel = cv::Point3_<uint8_t>;
+using Pixel = cv::Point3_< uint8_t >;
 
 namespace Ue5
 {
 // =============================================================================
 
-    string FeatureAverageColor::getFilterName() { return "AverageColor"; }
+    string FeatureAverageColor::getFilterName(){ return "AverageColor"; }
 
     double FeatureAverageColor::compare( FeatureValue a, FeatureValue b )
     {
         double ret = 0;
-        if(a.size() != 3 || b.size() != 3 )
+
+        if( (a.size() != 3) || (b.size() != 3) )
         {
             cerr << "Wrong amount of parameter: should be 3, is: a(" << a.size() << ") | b(" << b.size() << ")" << endl;
             return 0;
@@ -28,7 +29,7 @@ namespace Ue5
         ret += 1 - abs( a[1] - b[1] ) / 255;
         ret += 1 - abs( a[2] - b[2] ) / 255;
 
-        return ret/3;
+        return ret / 3;
     }
 
     FeatureValue FeatureAverageColor::calculate( cv::InputArray _image, std::vector< uint > points )
@@ -58,11 +59,11 @@ namespace Ue5
             r += ptr->z;
         }
 
-        ret.push_back( r / (n*1.0) );
-        ret.push_back( g / (n*1.0) );
-        ret.push_back( b / (n*1.0) );
+        ret.push_back( r / (n * 1.0) );
+        ret.push_back( g / (n * 1.0) );
+        ret.push_back( b / (n * 1.0) );
 
-        //cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
+        // cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
 
         return ret;
     }
@@ -77,7 +78,7 @@ namespace Ue5
         ret.push_back( avgColor[1] );
         ret.push_back( avgColor[0] );
 
-        //cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
+        // cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
 
         return ret;
     }
@@ -116,7 +117,7 @@ namespace Ue5
     void FeatureAverageColor::clearAccu()
     {
         accu[0] = accu[1] = accu[2] = 0;
-        count = 0;
+        count   = 0;
     }
 
 // =============================================================================
@@ -127,4 +128,23 @@ namespace Ue5
     }
 
     FeatureAverageColor::~FeatureAverageColor(){}
+
+// =============================================================================
+
+    Feature::FeatureType FeatureAverageColor::getFeatureType()
+    {
+        return Feature::FeatureType::Simple;
+    }
+
+    double FeatureAverageColor::compare( FeatureMat grp, cv::InputArray image )
+    {
+        cerr << "compare( FeatureMat grp, cv::InputArray image ): Not supported for simple Features!" << endl;
+        return 0;
+    }
+
+    FeatureMat FeatureAverageColor::getNormedAccumulateMat()
+    {
+        cerr << "getNormedAccumulateMat(): Not supported for simple Features" << endl;
+        return FeatureMat();
+    }
 }
