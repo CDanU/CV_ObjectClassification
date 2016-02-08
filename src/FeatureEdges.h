@@ -30,7 +30,6 @@ namespace Ue5
             };
 
             static Directions getDirection( int gx, int gy );
-            static void       applyFilter( cv::InputArray Data, cv::OutputArray Output, const int* FilterArray, int kWidth, int kHeight, int C, bool norm );
 
             FeatureValue calculate( cv::InputArray image );
             void         accumulate( cv::InputArray image );
