@@ -32,6 +32,7 @@ namespace Ue5
         return ret / 3;
     }
 
+    /*
     FeatureValue FeatureAverageColor::calculate( cv::InputArray _image, std::vector< uint > points )
     {
         if( points.empty() )
@@ -67,6 +68,7 @@ namespace Ue5
 
         return ret;
     }
+    //*/
 
     FeatureValue FeatureAverageColor::calculate( cv::InputArray image )
     {
@@ -81,16 +83,6 @@ namespace Ue5
         // cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
 
         return ret;
-    }
-
-    void FeatureAverageColor::accumulate( cv::InputArray image, std::vector< uint > points )
-    {
-        FeatureValue result = FeatureAverageColor::calculate( image, points );
-
-        accu[0] += result[0];
-        accu[1] += result[1];
-        accu[2] += result[2];
-        count++;
     }
 
     void FeatureAverageColor::accumulate( cv::InputArray image )
