@@ -12,6 +12,7 @@ namespace Ue5
         private:
             double accu[3];
             uint64 count;
+            FeatureValue calculateP( cv::InputArray image );
 
         public:
             double compare( FeatureValue a, FeatureValue b );

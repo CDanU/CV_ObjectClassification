@@ -43,6 +43,8 @@ namespace Ue5
 
     FeatureValue FeatureShiCorner::genDescriptor( InputArray _image, vector< pair< int, int > > points )
     {
+        auto out = FeatureValue();
+
         for( auto point : points )
         {
             // every kSize x kSize a new feature
@@ -50,9 +52,8 @@ namespace Ue5
             const auto image  = _image.getMat();
             const auto height = image.rows;
             const auto width  = image.cols;
-            auto x   = point.first;
-            auto y   = point.second;
-            auto out = FeatureValue();
+            auto x = point.first;
+            auto y = point.second;
 
             for( int fy = -kSize; fy <= kSize; fy++ )
             {
@@ -74,6 +75,8 @@ namespace Ue5
                 }
             }
         }
+
+        return out;
     }
 
     vector< pair< int, int > > FeatureShiCorner::genPoints( InputArray _image )
@@ -240,7 +243,8 @@ namespace Ue5
         maxFilter< int32_t >( corners, cornersFiltered, 5, 5 );
         // */
 
-#ifdef DEBUG
+/*
+    #ifdef DEBUG == 0
         Mat derXd, derYd, cornersd;
         cornersFiltered.convertTo( cornersd, CV_8UC1 );
         derX.convertTo( derXd, CV_8UC1 );
@@ -278,7 +282,8 @@ namespace Ue5
         imshow( "Shi Corner Image", cornersdc );
 
         waitKey( 0 );
-#endif
+    #endif
+   //*/
     }
 
 // =============================================================================

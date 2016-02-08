@@ -10,16 +10,20 @@ namespace Ue5
 
     class FeatureShiCorner : public Feature
     {
+        public:
+            void computeRawCornerMat( cv::InputArray image, cv::OutputArray corner );
+
+            std::vector< std::pair< int, int > > genPoints( cv::InputArray _image );
+
         private:
             static const int filter_derX[1][3];
             static const int filter_derY[3][1];
             static const int filter_gauss[3][3];
             static const int descRadius = 2;
 
-            void         computeRawCornerMat( cv::InputArray image, cv::OutputArray corner );
+            // void computeRawCornerMat( cv::InputArray image, cv::OutputArray corner );
+            // std::vector< std::pair< int, int > > genPoints( cv::InputArray _image );
             FeatureValue genDescriptor( cv::InputArray _image, std::vector< std::pair< int, int > > points );
-
-            std::vector< std::pair< int, int > > genPoints( cv::InputArray _image );
 
         public:
             double compare( FeatureValue a, FeatureValue b );
