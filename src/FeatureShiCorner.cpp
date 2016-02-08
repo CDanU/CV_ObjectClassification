@@ -243,47 +243,46 @@ namespace Ue5
         maxFilter< int32_t >( corners, cornersFiltered, 5, 5 );
         // */
 
-/*
-    #ifdef DEBUG == 0
-        Mat derXd, derYd, cornersd;
-        cornersFiltered.convertTo( cornersd, CV_8UC1 );
-        derX.convertTo( derXd, CV_8UC1 );
-        derY.convertTo( derYd, CV_8UC1 );
-
-        // Display corners over the image (cross)
-        Mat cornersdc = image.clone();
-
-        auto cornerPoints = genPoints( cornersFiltered );
-
-        for( auto p : cornerPoints )
+        if( isDebugMode )
         {
-            for( int dx = -2; dx <= 2; dx++ )
+            Mat derXd, derYd, cornersd;
+            cornersFiltered.convertTo( cornersd, CV_8UC1 );
+            derX.convertTo( derXd, CV_8UC1 );
+            derY.convertTo( derYd, CV_8UC1 );
+
+            // Display corners over the image (cross)
+            Mat cornersdc = image.clone();
+
+            auto cornerPoints = genPoints( cornersFiltered );
+
+            for( auto p : cornerPoints )
             {
-                int x = p.first + dx;
-                int y = p.second;
-                if( (x < 0) || (x >= width) ) { continue; }
-                cornersdc.at< uchar >( y, x ) = 0;
+                for( int dx = -2; dx <= 2; dx++ )
+                {
+                    int x = p.first + dx;
+                    int y = p.second;
+                    if( ( x < 0) || ( x >= width) ) { continue; }
+                    cornersdc.at< uchar >( y, x ) = 0;
+                }
+
+                for( int dy = -2; dy <= 2; dy++ )
+                {
+                    int x = p.first;
+                    int y = p.second + dy;
+                    if( ( y < 0) || ( y >= height) ) { continue; }
+
+                    cornersdc.at< uchar >( y, x ) = 0;
+                }
             }
 
-            for( int dy = -2; dy <= 2; dy++ )
-            {
-                int x = p.first;
-                int y = p.second + dy;
-                if( (y < 0) || (y >= height) ) { continue; }
+            imshow( "image", image );
+            imshow( "derX", derXd );
+            imshow( "derY", derYd );
+            imshow( "Shi Corner", cornersd );
+            imshow( "Shi Corner Image", cornersdc );
 
-                cornersdc.at< uchar >( y, x ) = 0;
-            }
+            waitKey( 0 );
         }
-
-        imshow( "image", image );
-        imshow( "derX", derXd );
-        imshow( "derY", derYd );
-        imshow( "Shi Corner", cornersd );
-        imshow( "Shi Corner Image", cornersdc );
-
-        waitKey( 0 );
-    #endif
-   //*/
     }
 
 // =============================================================================
