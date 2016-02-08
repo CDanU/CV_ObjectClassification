@@ -283,7 +283,11 @@ namespace Ue5
             imshow( "Histo image", image_histo );
             imshow( "Direction image", image_direction );
             imshow( "Histo Direction image", image_histo_direction );
+
             waitKey( 0 );
+            destroyAllWindows();
+            waitKey( 1 );
+
         }
 
         // ------------------------------------

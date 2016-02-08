@@ -441,6 +441,8 @@ namespace Ue5
 
         imshow( "Matrix", image );           // Show our image inside it.
         waitKey( 0 );           // Wait for a keystroke in the window
+        destroyAllWindows();
+        waitKey( 1 );
     }
 
     Classification::Classification( const FeatureList& _featureList, string groupsConfigPath )

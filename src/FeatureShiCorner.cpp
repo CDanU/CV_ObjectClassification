@@ -282,6 +282,8 @@ namespace Ue5
             imshow( "Shi Corner Image", cornersdc );
 
             waitKey( 0 );
+            destroyAllWindows();
+            waitKey( 1 );
         }
     }
 
