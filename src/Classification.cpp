@@ -10,6 +10,8 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 namespace Ue5
 {
@@ -101,6 +103,8 @@ namespace Ue5
 
     void Classification::training()
     {
+        db->clear();
+
         const string regexString = "^(.[^_]+).*$";
 
         map< string, vector< string > > groupFilesMap;
@@ -202,21 +206,20 @@ namespace Ue5
         colTitle.push_back( "Picture / Group" );
         colCellLength.push_back( ( *(colTitle.end() - 1) ).length() );
 
-        auto maxGroups = root.size();
+        size_t maxGroups = root.size();
         // auto maxTotal = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
 
         Mat1d mat( maxGroups + 3, maxGroups, double(0) );
 
+        int col = 0;
         for( auto& group : root )
         {
             colTitle.push_back( group.first );
             rowTitle.push_back( group.first );
             colCellLength.push_back( group.first.length() );
-        }
+            errorRate.push_back( 0 );
+            maxValues.push_back( 0 );
 
-        int col = 0;
-        for( auto& group : root )
-        {
             for( auto& feature : group.second )
             {
                 if( feature.first != "files" ) { continue; }
@@ -225,7 +228,6 @@ namespace Ue5
                 {
                     auto file = fileC.second.data();
                     if( file.empty() ) { continue; }
-
                     parse< Mat >( mat, col, picturePath + file );
                 }
 
@@ -234,8 +236,9 @@ namespace Ue5
 
             for( int r = 0; r < maxGroups; ++r )
             {
-                mat[maxGroups + 2][col] += mat[r][col];
-                if( r != col ) { mat[maxGroups][col] += mat[r][col]; }
+                auto val = mat[r][col];
+                maxValues[col] += val;
+                if( r != col ) { errorRate[col] += val; }
             }
 
             ++col;
@@ -251,14 +254,16 @@ namespace Ue5
 
         rowTitle.push_back( "Error Rate" );
         rowTitle.push_back( "Mean Rank" );
+        rowTitle.push_back( "Total" );
 
         // matrix output
 
-        int rows = maxGroups + 2;
+        int rows = maxGroups + 3;         // matrix + errorrate, mean, rank, maxvalues
         int cols = maxGroups;
 
         auto length = 0;
         string cell = "";
+        const double scaleFactor = (255.0 / 100.0);
 
         for( auto row = -1; row < rows; ++row )
         {
@@ -281,14 +286,17 @@ namespace Ue5
                         cell = row < rowTitle.size() ? rowTitle[row] : "?";
                         matFile << cell + string( CELL_LENGTH - cell.length(), ' ' );
                     }
-                    else if( col >= 0 )
+                    else if( ( col >= 0) && ( col < maxGroups) )
                     {
                         cell = "";
 
                         if( rowTitle[row] == "Error Rate" )
                         {
-                            auto dval = (mat.at< double >( row, col ) / mat[maxGroups + 2][col]) * 100;
-                            cell = to_string( int( round( dval ) ) );
+                            auto dval = (errorRate[col] / maxValues[col]) * 100;
+                            dval           = round( dval );
+                            errorRate[col] = dval;
+                            mat.at< double >( maxGroups + 2, col ) = dval * scaleFactor;
+                            cell = to_string( int(dval) );
                         }
                         else if( rowTitle[row] == "Mean Rank" )
                         {
@@ -296,8 +304,10 @@ namespace Ue5
                         }
                         else if( row < maxGroups )
                         {
-                            auto dval = (mat.at< double >( row, col ) / mat[maxGroups + 2][col]) * 100;
-                            cell = to_string( int( round( dval ) ) );
+                            auto dval = (mat.at< double >( row, col ) / maxValues[col]) * 100;
+                            dval = round( dval );
+                            mat.at< double >( row, col ) = dval * scaleFactor;
+                            cell = to_string( int(dval) );
                         }
 
                         matFile << " | " + cell + string( CELL_LENGTH - cell.length(), ' ' );
@@ -311,6 +321,15 @@ namespace Ue5
 
         cout << endl << "Matrix complete. See matrix.txt." << endl;
         matFile.close();
+
+        Mat image;
+        Mat scal;
+
+        resize( mat, scal, Size( 400, 400 ), 0, 0, 0 );
+        scal.convertTo( image, CV_8UC1 );
+
+        imshow( "Matrix", image );           // Show our image inside it.
+        waitKey( 0 );           // Wait for a keystroke in the window
     }
 
     Classification::Classification( const FeatureList& _featureList, string groupsConfigPath )
