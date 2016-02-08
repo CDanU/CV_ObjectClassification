@@ -345,12 +345,6 @@ namespace Ue5
 
 // =============================================================================
 
-    FeatureValue FeatureEdges::calculate( InputArray image, vector< uint > points )
-    {
-        cerr << "Feature does not support Points" << endl;
-        return calculate( image );
-    }
-
     FeatureValue FeatureEdges::calculate( InputArray image )
     {
         const auto height = image.rows();
@@ -438,17 +432,6 @@ namespace Ue5
         ret.push_back( count_vertical );
 
         return ret;
-    }
-
-    void FeatureEdges::accumulate( InputArray image, vector< uint > points )
-    {
-        FeatureValue ret = calculate( image, points );
-
-        accu[0] += ret[0];
-        accu[1] += ret[1];
-        accu[2] += ret[2];
-        accu[3] += ret[3];
-        count++;
     }
 
     void FeatureEdges::accumulate( InputArray image )

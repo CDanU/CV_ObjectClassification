@@ -295,16 +295,6 @@ namespace Ue5
         return FeatureValue();
     }
 
-    FeatureValue FeatureShiCorner::calculate( cv::InputArray image, std::vector< uint > points )
-    {
-        cout << "FeatureShiCorner::calculate:points" << endl;
-
-        Mat corner( image.rows(), image.cols(), CV_32SC1, Scalar( 0 ) );
-        computeRawCornerMat( image, corner );
-
-        return FeatureValue();
-    }
-
     FeatureValue FeatureShiCorner::calculate( cv::InputArray image )
     {
         Mat image_gray;
@@ -318,11 +308,6 @@ namespace Ue5
 
         // return genDescriptor;
         return FeatureValue();
-    }
-
-    void FeatureShiCorner::accumulate( cv::InputArray image, std::vector< uint > points )
-    {
-        calculate( image, points );
     }
 
     void FeatureShiCorner::accumulate( cv::InputArray image )
