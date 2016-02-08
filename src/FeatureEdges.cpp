@@ -274,16 +274,19 @@ namespace Ue5
         auto threshold = ISOData( image_histo );
         binarize( image_histo, image_histo_direction, threshold );
 
-        // imshow( "Gray image", image_gray );
-        // imshow( "Gauss image", image_gauss );
-        // imshow( "SobelX image", image_sobelX );
-        // imshow( "SobelY image", image_sobelY );
-        // imshow( "Sobel image", image_sobel );
-        // imshow( "NonMax image", image_nonMax );
-        // imshow( "Histo image", image_histo );
-        // imshow( "Direction image", image_direction );
-        // imshow( "Histo Direction image", image_histo_direction );
-        // waitKey( 0 );
+        if( isDebugMode )
+        {
+            imshow( "Gray image", image_gray );
+            imshow( "Gauss image", image_gauss );
+            imshow( "SobelX image", image_sobelX );
+            imshow( "SobelY image", image_sobelY );
+            imshow( "Sobel image", image_sobel );
+            imshow( "NonMax image", image_nonMax );
+            imshow( "Histo image", image_histo );
+            imshow( "Direction image", image_direction );
+            imshow( "Histo Direction image", image_histo_direction );
+            waitKey( 0 );
+        }
 
         // ------------------------------------
 

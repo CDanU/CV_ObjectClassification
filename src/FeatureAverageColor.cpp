@@ -3,6 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 #include "FeatureAverageColor.h"
 #include "FeatureShiCorner.h"
@@ -78,6 +79,7 @@ namespace Ue5
         ret.push_back( b / (n * 1.0) );
 
         // cout << "r:" << ret.at( 0 ) << ", g:" << ret.at( 1 ) << ", b:" << ret.at( 2 ) << endl;
+
 
         return ret;
     }

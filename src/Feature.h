@@ -11,13 +11,18 @@ namespace Ue5
 
     class Feature
     {
+        protected:
+            bool isDebugMode = false;
+
         public:
+            void debugMode( bool debug ){ isDebugMode = debug; }
+
             virtual double compare( FeatureValue a, FeatureValue b ) = 0;
 
             virtual std::string  getFilterName()       = 0;
             virtual FeatureValue getNormedAccumulate() = 0;
 
-            virtual FeatureValue calculate( cv::InputArray image ) = 0;
+            virtual FeatureValue calculate( cv::InputArray image )  = 0;
             virtual void         accumulate( cv::InputArray image ) = 0;
 
             virtual void clearAccu() = 0;
