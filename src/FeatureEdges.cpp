@@ -9,6 +9,7 @@
 
 
 #include "FeatureEdges.h"
+#include "ApplyFilter.h"
 
 namespace Ue5
 {
@@ -206,109 +207,6 @@ namespace Ue5
         }
     }
 
-    void FeatureEdges::applyFilter( InputArray _data, OutputArray _output, const int* FilterArray, int kWidth, int kHeight, int C, bool norm )
-    {
-        // TODO checks
-        if( (kWidth % 2 == 0) || (kHeight % 2 == 0) )
-        {
-            cerr << "Gerade Kernel Höhe/Breite nicht erlaubt" << endl;
-            throw Exception();
-        }
-        if( _data.type() != _output.type() )
-        {
-            cerr << "_data.type() != _output.type() ->" << _data.type() << " != " << _output.type() << endl;
-            throw Exception();
-        }
-
-        Mat data         = _data.getMat();
-        Mat output       = _output.getMat();
-        const int height = data.rows;
-        const int width  = data.cols;
-        const int kernelSizeHalveWidth  = kWidth / 2;
-        const int kernelSizeHalveHeight = kHeight / 2;
-        const int endX = width - kernelSizeHalveWidth;
-        const int endY = height - kernelSizeHalveHeight;
-        int x, y, fx, fy;
-        int normDivisor = 0;
-        int sum         = 0;
-        int xD, yD;
-
-        const int borderBounds[4][4] = {
-            { 0,                            width,                0,                              kernelSizeHalveHeight          },
-            { 0,                            width,                height - kernelSizeHalveHeight, height                         },
-            { 0,                            kernelSizeHalveWidth, kernelSizeHalveHeight,          height - kernelSizeHalveHeight },
-            { width - kernelSizeHalveWidth, width,                kernelSizeHalveHeight,          height - kernelSizeHalveHeight },
-        };
-
-        if( norm )
-        {
-            for( int i = 0; i < kWidth * kHeight; i++ )
-            {
-                normDivisor += abs( FilterArray[i] );
-            }
-        }
-
-        // border processing
-        for( int bbNr = 0; bbNr < 4; bbNr++ )
-        {
-            for( x = borderBounds[bbNr][0]; x < borderBounds[bbNr][1]; x++ )
-            {
-                for( y = borderBounds[bbNr][2]; y < borderBounds[bbNr][3]; y++ )
-                {
-                    sum = 0;
-
-                    for( fx = -kernelSizeHalveWidth; fx <= kernelSizeHalveWidth; fx++ )
-                    {
-                        for( fy = -kernelSizeHalveHeight; fy <= kernelSizeHalveHeight; fy++ )
-                        {
-                            xD = (x + fx);
-                            if( xD < 0 ) { xD = 0; }
-                            if( xD >= width ) { xD = width - 1; }
-
-                            yD = (y + fy);
-                            if( yD < 0 ) { yD = 0; }
-                            if( yD >= height ) { yD = height - 1; }
-
-                            sum += data.at< uchar >( yD, xD ) * ( FilterArray[(kernelSizeHalveWidth + fx) + (kernelSizeHalveHeight + fy) * kWidth] );
-                        }
-                    }
-
-                    if( norm ) { sum /= normDivisor; }
-                    sum += C;
-
-                    if( sum < 0 ) { sum = 0; }
-                    if( sum > 255 ) { sum = 255; }
-                    output.at< uchar >( yD, xD ) = sum;
-                }
-            }
-        }
-
-        // inner processing
-        for( x = kernelSizeHalveWidth; x < endX; x++ )
-        {
-            for( y = kernelSizeHalveHeight; y < endY; y++ )
-            {
-                sum = 0;
-
-                for( fx = -kernelSizeHalveWidth; fx <= kernelSizeHalveWidth; fx++ )
-                {
-                    for( fy = -kernelSizeHalveHeight; fy <= kernelSizeHalveHeight; fy++ )
-                    {
-                        sum += data.at< uchar >( (y + fy), (x + fx) ) * ( FilterArray[(kernelSizeHalveWidth + fx) + (kernelSizeHalveHeight + fy) * kWidth] );
-                    }
-                }
-
-                if( norm ) { sum /= normDivisor; }
-                sum += C;
-
-                if( sum < 0 ) { sum = 0; }
-                if( sum > 255 ) { sum = 255; }
-
-                output.at< uchar >( y, x ) = sum;
-            }
-        }
-    }
-
     void FeatureEdges::generateSobel( cv::InputArray grayImg, cv::OutputArray _sobel, cv::OutputArray sobelx, cv::OutputArray sobely )
     {
         // TODO checks
@@ -328,8 +226,8 @@ namespace Ue5
         auto sobelY = sobely.getMat();
         auto sobel  = _sobel.getMat();
 
-        applyFilter( grayImg, sobelx, &filter_sobelX[0][0], 3, 3, 128, true );
-        applyFilter( grayImg, sobely, &filter_sobelY[0][0], 3, 3, 128, true );
+        applyFilter< uchar >( grayImg, sobelx, &filter_sobelX[0][0], 3, 3, 128, true );
+        applyFilter< uchar >( grayImg, sobely, &filter_sobelY[0][0], 3, 3, 128, true );
 
         auto it_sX = sobelX.begin< uchar >();
         auto it_sY = sobelY.begin< uchar >();
@@ -362,7 +260,7 @@ namespace Ue5
         Mat image_histo_direction( height, width, CV_8UC1, Scalar( 0 ) );
 
         cvtColor( image, image_gray, CV_BGR2GRAY );
-        applyFilter( image_gray, image_gauss, &filter_gauss[0][0], 3, 3, 0, true );
+        applyFilter< uchar >( image_gray, image_gauss, &filter_gauss[0][0], 3, 3, 0, true );
 
         // generateSobel( image_gauss, image_sobel, image_sobelX, image_sobelY );
         generateSobel( image_gray, image_sobel, image_sobelX, image_sobelY );
