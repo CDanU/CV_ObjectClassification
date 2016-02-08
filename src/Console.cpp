@@ -70,17 +70,21 @@ void Ue5::Console()
 
     auto help = [&]( string input ){
                     cout << endl << "[ Commands ]" << endl << endl
-                         << "(h)elp            : this info" << endl
-                         << "path              : shows current image directory" << endl
-                         << "cd ('path')       : sets image directory ('#reset' resets to default)" << endl
-                         << "ls, list          : list images in current image directory" << endl
-                         << "show (0..9..)     : displays an image given in list" << endl
-                         << "train             : start Training for Classification" << endl
-                         << "classify (0..9..) : start Classification for an image given in list" << endl
-                         << "matrix            : start Classification Matrix" << endl
-                         << "(q)uit, exit      : exit program" << endl;
+                         << "(h)elp                    : this info" << endl
+                         << "path                      : shows current image directory" << endl
+                         << "cd ('path')               : sets image directory ('#reset' resets to default)" << endl
+                         << "ls, list                  : list images in current image directory" << endl
+                         << "features                  : list all features" << endl
+                         << "feature (0..9..) (0..9..) : applies a feature on an image. first: feature index, second: image index" << endl
+                         << "show (0..9..)             : displays an image given in list (image index)" << endl
+                         << "train                     : start Training for Classification" << endl
+                         << "classify (0..9..)         : start Classification for an image given in list (image index)" << endl
+                         << "matrix                    : start Classification Matrix" << endl
+                         << "(q)uit, exit              : exit program" << endl;
                     return Valid;
                 };
+
+    auto isStrNumber = [&]( string input, size_t maxSize ){ return input.size() && input.size() <= maxSize && is_number( input ); };
 
     map< string, function< ReturnCode( string ) > > commands {
         {
@@ -140,9 +144,8 @@ void Ue5::Console()
                 auto maxIndex = !files.empty() ? files.size() - 1 : 0;
 
                 string numbStr = input.size() > size ? input.substr( size ) : "";
-                bool error     = ( !numbStr.size() || numbStr.size() > to_string( maxIndex ).size() || !is_number( numbStr ) );
 
-                if( !error )
+                if( isStrNumber( numbStr, to_string( maxIndex ).size() ) )
                 {
                     istringstream( numbStr ) >> index;
 
@@ -165,18 +168,22 @@ void Ue5::Console()
                 auto size      = string( "classify" ).size() + 1;
                 int index      = 0;
                 string numbStr = input.size() > size ? input.substr( size ) : "";
+                auto maxIndex  = !files.empty() ? files.size() - 1 : 0;
 
-                if( numbStr != "" ) { istringstream( numbStr ) >> index; }
-
-                auto maxIndex = !files.empty() ? files.size() - 1 : 0;
-
-                if( !files.empty() && (index >= 0) && ( index < files.size() ) )
+                if( isStrNumber( numbStr, to_string( maxIndex ).size() ) )
                 {
-                    DoClassify( imgpath + files[index] );
-                }
-                else { cout << "Invalid Index or no files in list! (Max:" << maxIndex << ")" << endl; }
+                    istringstream( numbStr ) >> index;
 
-                return Valid;
+                    if( index < files.size() )
+                    {
+                        DoClassify( imgpath + files[index] );
+                        return Valid;
+                    }
+                }
+
+                cout << "Invalid Index or no files in list! (Max:" << maxIndex << ")" << endl;
+
+                return Error;
             }
         },
         {
@@ -184,10 +191,67 @@ void Ue5::Console()
                 ShowMatrix( imgpath );
                 return Valid;
             }
+        },
+        {
+            "features", [&]( string input ){
+                auto featureNames = GetFeatureNames();
+
+                cout << "List Features:\n";
+                unsigned int count = 0;
+
+                for( auto& f : featureNames )
+                {
+                    cout << count << ": " << f << endl;
+                    count++;
+                }
+
+                return Valid;
+            }
+        },
+        {
+            "feature", [&]( string input ){
+                if( files.empty() ) { searchFiles(); }
+
+                auto featureNames = GetFeatureNames();
+
+                int findex = 0;
+                int pindex = 0;
+
+                auto maxFileIndex    = files.size() > 0 ? files.size() - 1 : 0;
+                auto maxFeatureIndex = featureNames.size() > 0 ? featureNames.size() - 1 : 0;
+
+                auto size      = string( "feature" ).size() + 1;
+                string numbStr = input.size() > size ? input.substr( size ) : "";
+
+                if( numbStr != "" )
+                {
+                    auto find = numbStr.find( " " );
+                    if( find != string::npos )
+                    {
+                        auto feature = numbStr.substr( 0, find );
+                        auto pic     = numbStr.substr( find + 1 );
+
+                        if( isStrNumber( feature, to_string( maxFeatureIndex ).size() ) && isStrNumber( feature, to_string( maxFileIndex ).size() ) )
+                        {
+                            istringstream( feature ) >> findex;
+                            istringstream( pic ) >> pindex;
+
+                            if( ( findex < featureNames.size() ) && ( pindex < files.size() ) )
+                            {
+                                ShowFeature( findex, imgpath + files[pindex] );
+                                return Valid;
+                            }
+                        }
+                    }
+                }
+
+                cout << "Invalid Index or no files in list! (Max:" << maxFeatureIndex << ";" << maxFileIndex << ")" << endl;
+
+                return Error;
+            }
         }
     };
 
-    char clr[100];
     while( true )
     {
         input = "";

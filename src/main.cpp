@@ -17,6 +17,8 @@ int  registerEvents();
 #include "FeatureAverageColor.h"
 #include "FeatureEdges.h"
 
+#include <opencv2/highgui.hpp>
+
 #ifdef WIN32
     #include <Windows.h>
     #define REGISTER_SHUTDOWN_EVENT SetConsoleCtrlHandler( OnConsoleClose, TRUE );
@@ -52,6 +54,29 @@ void initFeatures()
 {
     featureList.push_back( std::unique_ptr< Ue5::Feature >( new Ue5::FeatureAverageColor() ) );
     featureList.push_back( std::unique_ptr< Ue5::Feature >( new Ue5::FeatureEdges() ) );
+}
+
+std::vector< std::string > Ue5::GetFeatureNames()
+{
+    std::vector< std::string > list;
+
+    for( auto& f : featureList )
+    {
+        list.push_back( f->getFilterName() );
+    }
+
+    return list;
+}
+
+void Ue5::ShowFeature( int index, std::string imgpath )
+{
+    auto & feature = featureList[index];
+
+    std::cout << "Apply feature '" << feature->getFilterName() << "' to " << imgpath << "..." << std::endl;
+
+    feature->accumulate( cv::imread( imgpath ) );
+
+    std::cout << "Feature Done." << std::endl;
 }
 
 void initClassify( std::string groupsConfigPath, std::vector< std::unique_ptr< Ue5::Feature > >& featureList )
