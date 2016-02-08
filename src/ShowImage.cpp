@@ -18,4 +18,6 @@ void Ue5::showImage( std::string file )
     imshow( "Display window", image );     // Show our image inside it.
 
     cv::waitKey( 0 );     // Wait for a keystroke in the window
+
+	cv::destroyWindow("Display window");
 }
