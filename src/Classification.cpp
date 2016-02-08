@@ -196,15 +196,16 @@ namespace Ue5
 
         cout << "Build matrix [" << string( 20, ' ' ) << "] 0%";
 
-        vector< string > colTitle;
-        vector< string > rowTitle;
-        vector< int > colCellLength;
+        vector< string > colTitles;
+        vector< string > rowTitles;
 
         vector< double > maxValues;
         vector< double > errorRate;
 
-        colTitle.push_back( "Picture / Group" );
-        colCellLength.push_back( ( *(colTitle.end() - 1) ).length() );
+        string firstRowCol = "Picture / Group";
+
+        colTitles.push_back( firstRowCol );
+        rowTitles.push_back( firstRowCol );
 
         size_t maxGroups = root.size();
         // auto maxTotal = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
@@ -214,9 +215,8 @@ namespace Ue5
         int col = 0;
         for( auto& group : root )
         {
-            colTitle.push_back( group.first );
-            rowTitle.push_back( group.first );
-            colCellLength.push_back( group.first.length() );
+            colTitles.push_back( group.first );
+            rowTitles.push_back( group.first );
             errorRate.push_back( 0 );
             maxValues.push_back( 0 );
 
@@ -241,6 +241,8 @@ namespace Ue5
                 if( r != col ) { errorRate[col] += val; }
             }
 
+            maxValues[col] = 100.0 / maxValues[col];
+
             ++col;
 
             // progress bar
@@ -252,72 +254,104 @@ namespace Ue5
             // -----------------------
         }
 
-        rowTitle.push_back( "Error Rate" );
-        rowTitle.push_back( "Mean Rank" );
-        rowTitle.push_back( "Total" );
+        rowTitles.push_back( "Total" );
+        rowTitles.push_back( "Error Rate" );
+        rowTitles.push_back( "Mean Rank" );
 
         // matrix output
 
-        int rows = maxGroups + 3;         // matrix + errorrate, mean, rank, maxvalues
-        int cols = maxGroups;
+        int rows = rowTitles.size();
+        int cols = colTitles.size();
 
-        auto length = 0;
-        string cell = "";
+        auto length        = 0;
+        string cell        = "";
+        const string split = " | ";
+        string rowTitle    = "";
+        string colTitle    = "";
+
         const double scaleFactor = (255.0 / 100.0);
 
-        for( auto row = -1; row < rows; ++row )
+        for( auto row = 0; row < rows; ++row )
         {
-            for( auto col = -1; col < cols; ++col )
+            rowTitle = ( row >= 0 && row < rowTitles.size() ) ? rowTitles[row] : "?";
+
+            for( auto col = 0; col < cols; ++col )
             {
-                auto CELL_LENGTH = colCellLength[col + 1];
+                colTitle = ( col >= 0 && col < colTitles.size() ) ? colTitles[col] : "?";
 
-                if( row == -1 )
+                auto CELL_LENGTH = colTitle.size();
+                if( CELL_LENGTH < 10 ) { CELL_LENGTH = 10; }
+
+                cell = "";
+
+                if( row == 0 )
                 {
-                    cell = (col + 1) < colTitle.size() ? colTitle[col + 1] : "?";
-
-                    string msg = (col > -1 ? " | " : "") + cell + string( CELL_LENGTH - cell.length(), ' ' );
-                    length += msg.length();
-                    matFile << msg;
+                    if( col > 0 ) { length += split.length(); }
+                    cell    = colTitle;
+                    length += CELL_LENGTH;
                 }
-                else if( row >= 0 )
+                else if( row > 0 )
                 {
-                    if( col == -1 )
-                    {
-                        cell = row < rowTitle.size() ? rowTitle[row] : "?";
-                        matFile << cell + string( CELL_LENGTH - cell.length(), ' ' );
-                    }
-                    else if( ( col >= 0) && ( col < maxGroups) )
-                    {
-                        cell = "";
+                    if( col == 0 ) { cell = rowTitle; }
 
-                        if( rowTitle[row] == "Error Rate" )
+                    else if( col > 0 )
+                    {
+                        auto row_index = row - 1;
+                        auto col_index = col - 1;
+
+                        if( rowTitle == "Error Rate" )
                         {
-                            auto dval = (errorRate[col] / maxValues[col]) * 100;
-                            dval           = round( dval );
-                            errorRate[col] = dval;
-                            mat.at< double >( maxGroups + 2, col ) = dval * scaleFactor;
-                            cell = to_string( int(dval) );
-                        }
-                        else if( rowTitle[row] == "Mean Rank" )
-                        {
-                            // TODO
-                        }
-                        else if( row < maxGroups )
-                        {
-                            auto dval = (mat.at< double >( row, col ) / maxValues[col]) * 100;
+                            auto dval = errorRate[col_index] * maxValues[col_index];
                             dval = round( dval );
-                            mat.at< double >( row, col ) = dval * scaleFactor;
+                            errorRate[col_index] = dval;
+                            mat.at< double >( maxGroups + 2, col_index ) = dval * scaleFactor;
                             cell = to_string( int(dval) );
                         }
+                        else if( rowTitle == "Mean Rank" )
+                        {
+                            cell = to_string( int(0) );
+                        }
+                        else if( rowTitle == "Total" )
+                        {
+                            double total = 0;
+                            for( auto r = 0; r < maxGroups; ++r )
+                            {
+                                total += mat.at< double >( r, col_index );
+                                mat.at< double >( r, col_index ) = int(mat.at< double >( r, col_index ) * scaleFactor);
+                            }
 
-                        matFile << " | " + cell + string( CELL_LENGTH - cell.length(), ' ' );
+                            cell = to_string( int( round( total ) ) );
+                        }
+                        else if( row_index < maxGroups )
+                        {
+                            auto dval = mat.at< double >( row_index, col_index ) * maxValues[col_index];
+                            // dval = round( dval );
+                            mat.at< double >( row_index, col_index ) = dval;
+                            cell = dval == 0 ? "0" : to_string( dval );
+                        }
                     }
                 }
+                auto len = cell.length();
+
+                if( col > 0 ) { matFile << " | "; }
+                matFile << cell << (len <= CELL_LENGTH ? string( CELL_LENGTH - len, ' ' ) : "");
             }
 
-            if( ( row == -1) || ( row == (maxGroups - 1) ) ) { matFile << endl << string( length, '-' ) << endl; }
+            if( ( row == 0) || ( row == maxGroups ) ) { matFile << endl << string( length, '-' ) << endl; }
             else { matFile << endl; }
         }
+
+        double errmax = 0;
+        for( auto errr : errorRate )
+        {
+            errmax += errr;
+        }
+
+        errmax /= errorRate.size();
+
+        matFile << endl;
+        matFile << "Overall Error Rate      : " << to_string( int( round( errmax ) ) ) << "%" << endl;
+        matFile << "Overall Correction Rate : " << to_string( int( round( 100 - errmax ) ) ) << "%" << endl;
 
         cout << endl << "Matrix complete. See matrix.txt." << endl;
         matFile.close();
