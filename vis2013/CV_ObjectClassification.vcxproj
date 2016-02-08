@@ -25,6 +25,7 @@
     <ClInclude Include="..\src\Feature.h" />
     <ClInclude Include="..\src\FeatureAverageColor.h" />
     <ClInclude Include="..\src\FeatureEdges.h" />
+    <ClInclude Include="..\src\FeatureShiCorner.h" />
     <ClInclude Include="..\src\FileSearch.h" />
     <ClInclude Include="..\src\includes.h" />
     <ClInclude Include="..\src\JsonFileTree.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="..\src\db.cpp" />
     <ClCompile Include="..\src\FeatureAverageColor.cpp" />
     <ClCompile Include="..\src\FeatureEdges.cpp" />
+    <ClCompile Include="..\src\FeatureShiCorner.cpp" />
     <ClCompile Include="..\src\FileSearch.cpp" />
     <ClCompile Include="..\src\JsonFileTree.cpp" />
     <ClCompile Include="..\src\main.cpp" />

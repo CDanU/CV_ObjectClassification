@@ -1,7 +1,11 @@
 #include <stdint.h>
 #include <iostream>
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include "FeatureAverageColor.h"
+#include "FeatureShiCorner.h"
 
 
 using namespace cv;
@@ -32,12 +36,24 @@ namespace Ue5
         return ret / 3;
     }
 
-    /*
-    FeatureValue FeatureAverageColor::calculate( cv::InputArray _image, std::vector< uint > points )
+    // *
+    FeatureValue FeatureAverageColor::calculate( cv::InputArray _image )
     {
+        Mat image_gray;
+        Mat shiImg( _image.rows(), _image.cols(), CV_32SC1, Scalar( 0 ) );
+
+        cvtColor( _image, image_gray, CV_BGR2GRAY );
+
+        FeatureShiCorner shi;
+        shi.computeRawCornerMat( image_gray, shiImg );
+        auto points = shi.genPoints( shiImg );
+
+
         if( points.empty() )
         {
-            return calculate( _image );
+            return {
+                       0, 0, 0
+            };
         }
         // ---------------------------------------------------------------------
 
@@ -49,12 +65,9 @@ namespace Ue5
         r = g = b = 0;
         n = points.size();
 
-        for( uint idx : points )
+        for( auto p : points )
         {
-            int row = idx / image.cols;
-            int col = idx - image.cols * row;
-
-            Pixel * ptr = image.ptr< Pixel >( col, row );
+            Pixel * ptr = image.ptr< Pixel >( p.second, p.first );
             b += ptr->x;
             g += ptr->y;
             r += ptr->z;
@@ -68,9 +81,9 @@ namespace Ue5
 
         return ret;
     }
-    //*/
+    // */
 
-    FeatureValue FeatureAverageColor::calculate( cv::InputArray image )
+    FeatureValue FeatureAverageColor::calculateP( cv::InputArray image )
     {
         auto ret = FeatureValue();
 
