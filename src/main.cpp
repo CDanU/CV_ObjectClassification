@@ -74,7 +74,9 @@ void Ue5::ShowFeature( int index, std::string imgpath )
 
     std::cout << "Apply feature '" << feature->getFilterName() << "' to " << imgpath << "..." << std::endl;
 
+    feature->debugMode( true );
     feature->accumulate( cv::imread( imgpath ) );
+    feature->debugMode( false );
 
     std::cout << "Feature Done." << std::endl;
 }
