@@ -63,15 +63,38 @@ namespace Ue5
         auto ret = FeatureValue();
         uint64 r, g, b, n;
 
+        const int radius = 15;
+
         r = g = b = 0;
-        n = points.size();
+
+        n = 0;
+
+        const auto width = _image.cols();
+        const auto height = _image.rows();
+
 
         for( auto p : points )
         {
-            Pixel * ptr = image.ptr< Pixel >( p.second, p.first );
-            b += ptr->x;
-            g += ptr->y;
-            r += ptr->z;
+            int x = p.first, y = p.second;
+
+            for( int dy = -radius; dy <= radius; dy++ )
+            {
+                for( int dx = -radius; dx <= radius; dx++ )
+                {
+                    int fx = x + dx;
+                    if( (fx < 0) || (fx >= width) ) { continue; }
+                    int fy = y + dy;
+                    if( (fy < 0) || (fy >= height) ) { continue; }
+
+                    Pixel ptr = image.at< Pixel >( fy , fx );
+                    b += ptr.x;
+                    g += ptr.y;
+                    r += ptr.z;
+
+                    n++;
+                }
+            }
+
         }
 
         ret.push_back( r / (n * 1.0) );

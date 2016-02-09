@@ -80,7 +80,7 @@ namespace Ue5
                 const auto fType = feature->getFeatureType();
                 if( fType == Feature::Simple )
                 {
-                    auto imageFeature = simpleFeatureMap.at( feature->getFilterName() );
+                    auto& imageFeature = simpleFeatureMap.at( feature->getFilterName() );
 
                     groupFeature.clear();
                     groupFeature.reserve( featureJSONGrp->second.size() );
@@ -101,7 +101,7 @@ namespace Ue5
                     if( (descWidth < 1) || (descHeight < 1) || (descType == -1) || matsJSONGrp.empty() )
                     {
                         cout << "parse error: " << feature->getFilterName() << endl;
-                        continue;
+                        break;
                     }
                     // ---------------------------------------------------------
 
@@ -121,7 +121,7 @@ namespace Ue5
                             it++;
                         }
 
-                        if( it != itE ) { continue; }
+                        if( it != itE ) { break; }
                         // -----------------------------------------------------
 
                         groupFeatureMat.push_back( desc );
