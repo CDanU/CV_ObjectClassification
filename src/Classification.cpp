@@ -263,28 +263,25 @@ namespace Ue5
         ofstream matFile( "matrix.txt" );
 
         if( !matFile.is_open() ) { throw "Unable to open matrix.txt"; }
+        if( picturePath.empty() ) { throw "Picture path is empty."; }
 
-        matFile << "[ Confusion Matrix ]" << endl << endl;
         auto & root = db->source.getRoot();
+        const size_t maxGroups = root.size();
 
         // string picturePath = root.get<string>("picturePath"); //  cannot find node
 
-        if( picturePath.empty() ) { throw "Picture path is empty."; }
-
+        matFile << "[ Confusion Matrix ]" << endl << endl;
         cout << "Build matrix [" << string( 20, ' ' ) << "] 0%";
+
 
         vector< string > colTitles;
         vector< string > rowTitles;
-
         vector< double > maxValues;
         vector< double > errorRate;
 
-        string firstRowCol = "Picture / Group";
+        colTitles.push_back( "Picture / Group" );
+        rowTitles.push_back( "Picture / Group" );
 
-        colTitles.push_back( firstRowCol );
-        rowTitles.push_back( firstRowCol );
-
-        size_t maxGroups = root.size();
         // auto maxTotal = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
 
         Mat1d mat( maxGroups + 3, maxGroups, double(0) );
@@ -297,18 +294,14 @@ namespace Ue5
             errorRate.push_back( 0 );
             maxValues.push_back( 0 );
 
-            for( auto& feature : group.second )
+            auto filesJSONGrp = group.second.find( "files" );
+            for( auto& fileC : filesJSONGrp->second )
             {
-                if( feature.first != "files" ) { continue; }
+                auto file = fileC.second.data();
+                if( file.empty() ) { continue; }
 
-                for( auto& fileC : feature.second )
-                {
-                    auto file = fileC.second.data();
-                    if( file.empty() ) { continue; }
-                    parse< Mat >( mat, col, picturePath + file );
-                }
-
-                break;
+                parse< Mat >( mat, col, picturePath + file );
+                cout << " ." << endl;
             }
 
             for( int r = 0; r < maxGroups; ++r )
@@ -324,10 +317,11 @@ namespace Ue5
 
             // progress bar
             // -----------------------
-            int progress = int( ( (col) / double(maxGroups) ) * 100 );
-            cout << "\r";             // go to first char in line
-            auto bar = string( int( (progress / 100.f) * 20 ), '=' );
-            cout << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%";
+            int progress = int( ( col / double(maxGroups) ) * 100 );
+            auto bar     = string( int( (progress / 100.0) * 20 ), '=' );
+
+            cout << "\r"             // go to first char in line
+                 << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%";
             // -----------------------
         }
 
