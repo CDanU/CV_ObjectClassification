@@ -46,7 +46,7 @@ namespace Ue5
     {
         const Mat img = imread( imagePath );
         ptree root    = db->source.getRoot();
-        FeatureValue imageFeature;
+        // FeatureValue imageFeature;
         FeatureValue groupFeature;
         FeatureMat groupFeatureMat;
 
@@ -54,6 +54,16 @@ namespace Ue5
 
         int row    = 0, targetRow = 0;
         double max = 0;
+
+
+        auto simpleFeatureMap = map< string, FeatureValue >();
+        for( auto& f : featureList )
+        {
+            if( f->getFeatureType() == Feature::Simple )
+            {
+                simpleFeatureMap.insert( make_pair( f->getFilterName(), f->calculate( img ) ) );
+            }
+        }
 
         for( auto& group : root )
         {
@@ -70,7 +80,7 @@ namespace Ue5
                 const auto fType = feature->getFeatureType();
                 if( fType == Feature::Simple )
                 {
-                    imageFeature = feature->calculate( img );
+                    auto imageFeature = simpleFeatureMap.at( feature->getFilterName() );
 
                     groupFeature.clear();
                     groupFeature.reserve( featureJSONGrp->second.size() );
@@ -301,7 +311,7 @@ namespace Ue5
                 if( file.empty() ) { continue; }
 
                 parse< Mat >( mat, col, picturePath + file );
-                cout << " ." << endl;
+                // cout << " ."  << endl;
             }
 
             for( int r = 0; r < maxGroups; ++r )
@@ -321,7 +331,7 @@ namespace Ue5
             auto bar     = string( int( (progress / 100.0) * 20 ), '=' );
 
             cout << "\r"             // go to first char in line
-                 << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%";
+                 << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%" << endl;
             // -----------------------
         }
 
