@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-#include "db.h"
+#include "JsonFileTree.h"
 #include "Feature.h"
 
 namespace Ue5
@@ -14,7 +14,7 @@ namespace Ue5
     {
         private:
             const FeatureList & featureList;
-            DB * db;
+            JsonFileTree jsonfileTree;
             std::string picturePath;
 
         public:

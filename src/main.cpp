@@ -30,7 +30,6 @@ BOOL WINAPI OnConsoleClose( DWORD dwCtrlType ){ OnExit(); return FALSE; }
 using FeatureList = std::vector< std::unique_ptr< Ue5::Feature > >;
 
 const char * locale = setlocale( LC_ALL, "" ); // für das Anzeigen von UTF-8 zeichen in der Console
-Ue5::DB db;
 Ue5::Classification * classification = NULL;
 FeatureList featureList;
 // Register Events by initializing this integer

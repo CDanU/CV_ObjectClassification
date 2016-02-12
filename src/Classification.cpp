@@ -45,7 +45,7 @@ namespace Ue5
     double Classification::parse< Mat >( Mat& matrix, int col, string imagePath )
     {
         const Mat img = imread( imagePath );
-        ptree root    = db->source.getRoot();
+        ptree root    = jsonfileTree.getRoot();
         // FeatureValue imageFeature;
         FeatureValue groupFeature;
         FeatureMat groupFeatureMat;
@@ -80,7 +80,7 @@ namespace Ue5
                 const auto fType = feature->getFeatureType();
                 if( fType == Feature::Simple )
                 {
-                    auto& imageFeature = simpleFeatureMap.at( feature->getFilterName() );
+                    auto & imageFeature = simpleFeatureMap.at( feature->getFilterName() );
 
                     groupFeature.clear();
                     groupFeature.reserve( featureJSONGrp->second.size() );
@@ -151,7 +151,7 @@ namespace Ue5
 
     void Classification::training()
     {
-        db->clear();
+        jsonfileTree.clear();
 
         // filters group name from file name
         const string regexString = "^(.[^_]+).*$";
@@ -182,7 +182,7 @@ namespace Ue5
         }
 
         // write settings in json file
-        auto & root = db->source.getRoot();
+        auto & root = jsonfileTree.getRoot();
         // root.put("picturePath", picturePath); // utf8 problem
 
         for( auto& e : groupFilesMap )
@@ -265,7 +265,7 @@ namespace Ue5
             root.push_back( std::make_pair( e.first, groupGroup ) );
         }
 
-        db->save();
+        jsonfileTree.write();
     }
 
     void Classification::showMatrix()
@@ -275,7 +275,7 @@ namespace Ue5
         if( !matFile.is_open() ) { throw "Unable to open matrix.txt"; }
         if( picturePath.empty() ) { throw "Picture path is empty."; }
 
-        auto & root = db->source.getRoot();
+        auto & root = jsonfileTree.getRoot();
         const size_t maxGroups = root.size();
 
         // string picturePath = root.get<string>("picturePath"); //  cannot find node
@@ -452,14 +452,10 @@ namespace Ue5
     Classification::Classification( const FeatureList& _featureList, string groupsConfigPath )
         : featureList( _featureList )
     {
-        db = new DB();
-        db->open( groupsConfigPath );
+        jsonfileTree.open( groupsConfigPath, "rw" );
     }
 
-    Classification::~Classification()
-    {
-        delete db;
-    }
+    Classification::~Classification(){}
 
     void Classification::setPicturePath( std::string picturePath )
     {

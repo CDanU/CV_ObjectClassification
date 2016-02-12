@@ -21,20 +21,17 @@
   <ItemGroup>
     <ClInclude Include="..\src\Classification.h" />
     <ClInclude Include="..\src\Console.h" />
-    <ClInclude Include="..\src\db.h" />
     <ClInclude Include="..\src\Feature.h" />
     <ClInclude Include="..\src\FeatureAverageColor.h" />
     <ClInclude Include="..\src\FeatureEdges.h" />
     <ClInclude Include="..\src\FeatureShiCorner.h" />
     <ClInclude Include="..\src\FileSearch.h" />
-    <ClInclude Include="..\src\includes.h" />
     <ClInclude Include="..\src\JsonFileTree.h" />
     <ClInclude Include="..\src\ShowImage.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Classification.cpp" />
     <ClCompile Include="..\src\Console.cpp" />
-    <ClCompile Include="..\src\db.cpp" />
     <ClCompile Include="..\src\FeatureAverageColor.cpp" />
     <ClCompile Include="..\src\FeatureEdges.cpp" />
     <ClCompile Include="..\src\FeatureShiCorner.cpp" />
