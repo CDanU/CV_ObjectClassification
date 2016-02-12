@@ -12,9 +12,13 @@ namespace Ue5
         private:
             int accu[4];
             uint64 count;
-            static const int filter_sobelX[3][3];
-            static const int filter_sobelY[3][3];
-            static const int filter_gauss[3][3];
+
+            static const int filter_sobelX1D0[3][1];
+            static const int filter_sobelX1D1[1][3];
+            static const int filter_sobelY1D0[3][1];
+            static const int filter_sobelY1D1[1][3];
+            static const int filter_gauss1D0[3][1];
+            static const int filter_gauss1D1[1][3];
 
             void generateSobel( cv::InputArray grayImg, cv::OutputArray sobel, cv::OutputArray sobelx, cv::OutputArray sobely );
             void nonMaxSuppression( cv::InputOutputArray image_input, cv::OutputArray image_direction, cv::InputArray image_sobelX, cv::InputArray image_sobelY );
