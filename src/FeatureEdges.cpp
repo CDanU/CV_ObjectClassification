@@ -207,7 +207,8 @@ namespace Ue5
     void FeatureEdges::generateSobel( cv::InputArray grayImg, cv::OutputArray _sobel, cv::OutputArray sobelx, cv::OutputArray sobely )
     {
         // TODO checks
-        // assert( grayImg.total() == _sobel.total() == sobelx.total() == sobely.total() );
+        /*
+        assert( grayImg.total() == _sobel.total() == sobelx.total() == sobely.total() );
         if( ( CV_8UC1 != grayImg.type() ) || ( CV_8UC1 != _sobel.type() ) || ( CV_8UC1 != sobelx.type() ) || ( CV_8UC1 != sobely.type() ) )
         {
             cerr << "CV_8UC1 != grayImg.type() || CV_8UC1 != _sobel.type() || CV_8UC1 != sobelx.type() || CV_8UC1 != sobely.type()" << endl;
@@ -218,11 +219,11 @@ namespace Ue5
                  << " | sobely.type(): " << sobely.type() << endl;
             throw Exception();
         }
+        //*/
 
         auto sobelX = sobelx.getMat();
         auto sobelY = sobely.getMat();
         auto sobel  = _sobel.getMat();
-
         applyFilter< uchar >( grayImg, sobelx, &filter_sobelX[0][0], 3, 3, 128, true );
         applyFilter< uchar >( grayImg, sobely, &filter_sobelY[0][0], 3, 3, 128, true );
 
@@ -246,42 +247,52 @@ namespace Ue5
     {
         const auto height = image.rows();
         const auto width  = image.cols();
-        Mat image_gray( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_gauss( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_sobel( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_sobelX( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_sobelY( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_nonMax( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_histo( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_direction( height, width, CV_8UC1, Scalar( 0 ) );
-        Mat image_histo_direction( height, width, CV_8UC1, Scalar( 0 ) );
+        Mat image_gray( height, width, CV_8UC1 );
+        Mat image_gauss( height, width, CV_8UC1 );
+        Mat image_sobel( height, width, CV_8UC1 );
+        Mat image_direction( height, width, CV_8UC1 );
+        Mat image_sobelX( height, width, CV_8UC1 );
+        Mat image_sobelY( height, width, CV_8UC1 );
+
+        // debug img
+        Mat image_sobelClone;
+        Mat image_NonMaxClone;
+        Mat image_directionClone;
 
         cvtColor( image, image_gray, CV_BGR2GRAY );
-        applyFilter< uchar >( image_gray, image_gauss, &filter_gauss[0][0], 3, 3, 0, true );
 
+        // applyFilter< uchar >( image_gray, image_gauss, &filter_gauss[0][0], 3, 3, 0, true );
         // generateSobel( image_gauss, image_sobel, image_sobelX, image_sobelY );
+
         generateSobel( image_gray, image_sobel, image_sobelX, image_sobelY );
 
-        image_nonMax = image_sobel.clone();
-        nonMaxSuppression( image_nonMax, image_direction, image_sobelX, image_sobelY );
+        if( isDebugMode )
+        {
+            image_sobelClone = image_sobel.clone();
+        }
 
-        image_histo           = image_nonMax.clone();
-        image_histo_direction = image_direction.clone();
+        nonMaxSuppression( image_sobel, image_direction, image_sobelX, image_sobelY );
+        const auto threshold = ISOData( image_sobel );
 
-        auto threshold = ISOData( image_histo );
-        binarize( image_histo, image_histo_direction, threshold );
+        if( isDebugMode )
+        {
+            image_directionClone = image_direction.clone();
+            image_NonMaxClone    = image_sobel.clone();
+        }
+
+        binarize( image_sobel, image_direction, threshold );
 
         if( isDebugMode )
         {
             imshow( "Gray image", image_gray );
-            imshow( "Gauss image", image_gauss );
+            // imshow( "Gauss image", image_gauss );
             imshow( "SobelX image", image_sobelX );
             imshow( "SobelY image", image_sobelY );
-            imshow( "Sobel image", image_sobel );
-            imshow( "NonMax image", image_nonMax );
-            imshow( "Histo image", image_histo );
-            imshow( "Direction image", image_direction );
-            imshow( "Histo Direction image", image_histo_direction );
+            imshow( "Sobel image", image_sobelClone );
+            imshow( "NonMax image", image_NonMaxClone );
+            imshow( "Direction image", image_directionClone );
+            imshow( "Binarized image", image_sobel );
+            imshow( "Binarized Direction image", image_direction );
 
             waitKey( 0 );
             destroyAllWindows();
@@ -296,7 +307,7 @@ namespace Ue5
         int count_vertical   = 0;
         Directions d;
 
-        for( auto itS = image_histo_direction.begin< uchar >(), itE = image_histo_direction.end< uchar >(); itS != itE; itS++ )
+        for( auto itS = image_direction.begin< uchar >(), itE = image_direction.end< uchar >(); itS != itE; itS++ )
         {
             d = (Directions) * itS;
 
@@ -325,6 +336,7 @@ namespace Ue5
                     count_vertical++;
                     break;
                 }
+
             }
         }
 
