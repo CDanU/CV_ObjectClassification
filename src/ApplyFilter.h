@@ -1,7 +1,7 @@
 #pragma once
 
 template< typename In, typename Out = In >
-void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* FilterArray, int kWidth, int kHeight, int constant, bool norm )
+void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* FilterArray, int kHeight, int kWidth, int constant = 0, bool norm = true )
 {
     assert( kWidth % 2 != 0 && kHeight % 2 != 0 );
 
