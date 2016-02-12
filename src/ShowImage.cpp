@@ -19,5 +19,5 @@ void Ue5::showImage( std::string file )
 
     cv::waitKey( 0 );     // Wait for a keystroke in the window
 
-	cv::destroyWindow("Display window");
+    cv::destroyWindow( "Display window" );
 }

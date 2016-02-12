@@ -12,7 +12,7 @@ namespace Ue5
         private:
             double accu[3];
             uint64 count;
-            void rgb2lab( const double rgb[3], float lab[3] );
+            void rgb2lab( const double rgb[3], double lab[3] );
             FeatureValue calculateP( cv::InputArray image );
 
         public:

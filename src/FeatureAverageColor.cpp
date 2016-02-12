@@ -18,18 +18,18 @@ namespace Ue5
 {
 // =============================================================================
 
-    void FeatureAverageColor::rgb2lab( const double _RGB[3], float lab[3] )
+    void FeatureAverageColor::rgb2lab( const double _RGB[3], double lab[3] )
     {
         // http://www.f4.fhtw-berlin.de/~barthel/ImageJ/ColorInspector/HTMLHelp/farbraumJava.htm
-        const float xyzRef[3] = { 0.964221, 1.0, 0.825211 };  // reference white D50
-        const float eps       = 216 / 24389.0;
-        const float k         = 24389 / 27.0;
-        float rgb[3], xyz[3];
+        const double xyzRef[3] = { 0.964221, 1.0, 0.825211 };  // reference white D50
+        const double eps       = 216 / 24389.0;
+        const double k         = 24389 / 27.0;
+        double rgb[3], xyz[3];
 
         // RGB to XYZ
-        rgb[0] = _RGB[0] / 255;
-        rgb[1] = _RGB[1] / 255;
-        rgb[2] = _RGB[2] / 255;
+        rgb[0] = _RGB[0] / 255.0;
+        rgb[1] = _RGB[1] / 255.0;
+        rgb[2] = _RGB[2] / 255.0;
 
         // assuming sRGB (D65)
         for( int i = 0; i < 3; i++ )
@@ -67,20 +67,10 @@ namespace Ue5
             cerr << "Wrong amount of parameters: should be 3, is: a(" << a.size() << ") | b(" << b.size() << ")" << endl;
             return 0;
         }
-        float aLAB[3], bLAB[3];
+        double aLAB[3], bLAB[3];
 
         rgb2lab( a.data(), aLAB );
         rgb2lab( b.data(), bLAB );
-
-        /*
-        cout << "A rgb| r: " << a[0] << " lab| L: " << aLAB[0] << endl
-             << "     | g: " << a[1] << "    | a: " << aLAB[1] << endl
-             << "     | b: " << a[2] << "    | b: " << aLAB[2] << endl;
-
-        cout << "B rgb| r: " << b[0] << " lab| L: " << bLAB[0] << endl
-             << "     | g: " << b[1] << "    | a: " << bLAB[1] << endl
-             << "     | b: " << b[2] << "    | b: " << bLAB[2] << endl << endl;
-        // */
 
         return 1 - sqrt( pow( aLAB[0] - bLAB[0], 2 ) + pow( aLAB[1] - bLAB[1], 2 ) + pow( aLAB[2] - bLAB[2], 2 ) ) / 255.0;
     }

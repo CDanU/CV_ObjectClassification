@@ -10,7 +10,7 @@ namespace Ue5
     class FeatureEdges : public Feature
     {
         private:
-            int accu[4];
+            double accu[4];
             uint64 count;
             static const int filter_sobelX[3][3];
             static const int filter_sobelY[3][3];

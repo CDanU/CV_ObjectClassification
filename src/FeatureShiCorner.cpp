@@ -144,9 +144,9 @@ namespace Ue5
 
                         int f = FeatureShiCorner::filter_gauss[(radius + dx)][(radius + dy)];
 
-                        Mx2.at< int32_t >( y, x ) += f * pow( derX.at< int32_t >( fy, fx ), 2 );
-                        My2.at< int32_t >( y, x ) += f * pow( derY.at< int32_t >( fy, fx ), 2 );
-                        Mxy.at< int32_t >( y, x ) += f * derX.at< int32_t >( fy, fx ) * derY.at< int >( fy, fx );
+                        Mx2.at< int32_t >( y, x ) += int32_t( f * pow( derX.at< int32_t >( fy, fx ), 2 ) );
+                        My2.at< int32_t >( y, x ) += int32_t( f * pow( derY.at< int32_t >( fy, fx ), 2 ) );
+                        Mxy.at< int32_t >( y, x ) += int32_t( f * derX.at< int32_t >( fy, fx ) * derY.at< int >( fy, fx ) );
                     }
                 }
 
@@ -178,10 +178,10 @@ namespace Ue5
 
             while( it_cS != it_cE )
             {
-                *it_cS   *= scaleFac;
-                *it_Mx2S *= scaleFac;
-                *it_My2S *= scaleFac;
-                *it_MxyS *= scaleFac;
+                *it_cS   *= int32_t( scaleFac );
+                *it_Mx2S *= int32_t( scaleFac );
+                *it_My2S *= int32_t( scaleFac );
+                *it_MxyS *= int32_t( scaleFac );
 
                 it_cS++;
                 it_Mx2S++;
@@ -230,7 +230,7 @@ namespace Ue5
         // *
         if( maxVal != 0 )
         {
-            const int threshold = maxVal * 0.2;
+            const double threshold = maxVal * 0.2;
             for( auto it_cE = corners.end< int32_t >(), it_cS = corners.begin< int32_t >(); it_cS != it_cE; it_cS++ )
             {
                 if( *it_cS < threshold ) { *it_cS = 0; }

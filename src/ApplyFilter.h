@@ -65,7 +65,7 @@ void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* Filt
                 if( norm ) { sum /= normDivisor; }
                 sum += constant;
 
-                output.at< Out >( y, x ) = sum;
+                output.at< Out >( y, x ) = Out( sum );
             }
         }
     }
@@ -88,7 +88,7 @@ void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* Filt
             if( norm ) { sum /= normDivisor; }
             sum += constant;
 
-            output.at< Out >( y, x ) = sum;
+            output.at< Out >( y, x ) = Out( sum );
         }
     }
 }

@@ -39,7 +39,6 @@ namespace Ue5
         auto img = pixels.getMat();
 
         uchar histo[256] = { 0 };
-        int gray;
         uchar histoStart = 0;
         uchar histoEnd   = 255;
         uchar pivot      = 0;
@@ -287,7 +286,6 @@ namespace Ue5
             waitKey( 0 );
             destroyAllWindows();
             waitKey( 1 );
-
         }
 
         // ------------------------------------
@@ -370,8 +368,6 @@ namespace Ue5
 
     double FeatureEdges::compare( FeatureValue a, FeatureValue b )
     {
-        double ret = 0;
-
         if( (a.size() != 4) || (b.size() != 4) )
         {
             cerr << "Wrong amount of parameter: should be 3, is: a(" << a.size() << ") | b(" << b.size() << ")" << endl;

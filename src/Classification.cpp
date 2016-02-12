@@ -116,7 +116,7 @@ namespace Ue5
 
                         for( auto val : entry.second )
                         {
-                            *it = val.second.get_value( 0 );
+                            *it = uchar( val.second.get_value( 0 ) );
                             if( it == itE ) { break; }
                             it++;
                         }
@@ -275,8 +275,8 @@ namespace Ue5
         if( !matFile.is_open() ) { throw "Unable to open matrix.txt"; }
         if( picturePath.empty() ) { throw "Picture path is empty."; }
 
-        auto & root = jsonfileTree.getRoot();
-        const size_t maxGroups = root.size();
+        auto & root         = jsonfileTree.getRoot();
+        const int maxGroups = int( root.size() );
 
         // string picturePath = root.get<string>("picturePath"); //  cannot find node
 
@@ -341,10 +341,10 @@ namespace Ue5
 
         // matrix output
 
-        int rows = rowTitles.size();
-        int cols = colTitles.size();
+        int rows = int( rowTitles.size() );
+        int cols = int( colTitles.size() );
 
-        auto length        = 0;
+        size_t length      = 0;
         string cell        = "";
         const string split = " | ";
         string rowTitle    = "";
