@@ -1,6 +1,7 @@
 #define NOMINMAX
 
 #include "Console.h"
+#include "ConsoleFeatureFunctons.h"
 
 #include <iostream>
 #include <sstream>
@@ -13,7 +14,12 @@
 
 using namespace std;
 
-void Ue5::Console()
+void Ue5::CloseConsole()
+{
+    CleanUp();
+}
+
+void Ue5::OpenConsole()
 {
     cout <<
         "##############################################\n" <<
