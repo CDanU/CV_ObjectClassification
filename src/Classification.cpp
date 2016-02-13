@@ -314,15 +314,6 @@ namespace Ue5
                 // cout << " ."  << endl;
             }
 
-            for( int r = 0; r < maxGroups; ++r )
-            {
-                auto val = mat[r][col];
-                maxValues[col] += val;
-                if( r != col ) { errorRate[col] += val; }
-            }
-
-            maxValues[col] = 100.0 / maxValues[col];
-
             ++col;
 
             // progress bar
@@ -333,6 +324,20 @@ namespace Ue5
             cout << "\r"             // go to first char in line
                  << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%" << endl;
             // -----------------------
+        }
+
+        col = 0;
+        for( auto& group : root )
+        {
+            for( int r = 0; r < maxGroups; ++r )
+            {
+                auto val = mat[r][col];
+                maxValues[col] += val;
+                if( r != col ) { errorRate[col] += val; }
+            }
+
+            maxValues[col] = 100.0 / maxValues[col];
+            ++col;
         }
 
         rowTitles.push_back( "Total" );
