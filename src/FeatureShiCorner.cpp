@@ -43,6 +43,8 @@ namespace Ue5
 
     FeatureValue FeatureShiCorner::genDescriptor( InputArray _image, vector< pair< int, int > > points )
     {
+        //TODO: finish
+
         auto out = FeatureValue();
 
         for( auto point : points )
