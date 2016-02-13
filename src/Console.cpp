@@ -25,9 +25,9 @@ void Ue5::OpenConsole()
         "##############################################\n" <<
         "# Name        : CV_ObjectClassification\n" <<
         "# Author      : Daniel Chumak, Mario Link\n" <<
-        "# Version     : 0.1.0\n" <<
+        "# Version     : 1.0.0\n" <<
         "# Copyright   : HtwDanielMario@2016\n" <<
-        "# Description : This Application ... TEXT ..\n" <<
+        "# Description : App for Object Classification\n" <<
         "##############################################\n";
 
     vector< string > files;

@@ -1,9 +1,9 @@
 // =============================================================================
 // Name        : CV_ObjectClassification
 // Author      : Daniel Chumak, Mario Link
-// Version     : 0.3.0
+// Version     : 1.0.0
 // Copyright   : HtwDanielMario@2016
-// Description : This Application ... TEXT ...
+// Description : App for Object Classification
 // =============================================================================
 
 
