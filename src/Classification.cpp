@@ -87,44 +87,48 @@ namespace Ue5
 
                     value += feature->compare( groupFeature, imageFeature );
                 }
-                else if( fType == Feature::Descriptor )
-                {
-                    int descWidth     = featureJSONGrp->second.get( "width", -1 );
-                    int descHeight    = featureJSONGrp->second.get( "heigt", -1 );
-                    int descType      = featureJSONGrp->second.get( "type", -1 );
-                    ptree matsJSONGrp = featureJSONGrp->second.get_child( "mats", ptree() );
 
-                    if( (descWidth < 1) || (descHeight < 1) || (descType == -1) || matsJSONGrp.empty() )
-                    {
-                        cout << "parse error: " << feature->getFilterName() << endl;
-                        break;
-                    }
-                    // ---------------------------------------------------------
+                // Future Code...
+                /*
+                   else if( fType == Feature::Descriptor )
+                   {
+                   int descWidth     = featureJSONGrp->second.get( "width", -1 );
+                   int descHeight    = featureJSONGrp->second.get( "heigt", -1 );
+                   int descType      = featureJSONGrp->second.get( "type", -1 );
+                   ptree matsJSONGrp = featureJSONGrp->second.get_child( "mats", ptree() );
 
-                    // loead desctiptors into a FeatureMat
-                    groupFeatureMat.clear();
-                    groupFeatureMat.reserve( matsJSONGrp.size() );
-                    for( auto entry : matsJSONGrp )
-                    {
-                        Mat desc( descWidth, descHeight, descType );
-                        const auto itE = desc.end< uchar >();
-                        auto it        = desc.begin< uchar >();
+                   if( (descWidth < 1) || (descHeight < 1) || (descType == -1) || matsJSONGrp.empty() )
+                   {
+                   cout << "parse error: " << feature->getFilterName() << endl;
+                   break;
+                   }
+                   // ---------------------------------------------------------
 
-                        for( auto val : entry.second )
-                        {
-                            *it = uchar( val.second.get_value( 0 ) );
-                            if( it == itE ) { break; }
-                            it++;
-                        }
+                   // loead desctiptors into a FeatureMat
+                   groupFeatureMat.clear();
+                   groupFeatureMat.reserve( matsJSONGrp.size() );
+                   for( auto entry : matsJSONGrp )
+                   {
+                   Mat desc( descWidth, descHeight, descType );
+                   const auto itE = desc.end< uchar >();
+                   auto it        = desc.begin< uchar >();
 
-                        if( it != itE ) { break; }
-                        // -----------------------------------------------------
+                   for( auto val : entry.second )
+                   {
+                  * it = uchar( val.second.get_value( 0 ) );
+                   if( it == itE ) { break; }
+                   it++;
+                   }
 
-                        groupFeatureMat.push_back( desc );
-                    }
+                   if( it != itE ) { break; }
+                   // -----------------------------------------------------
 
-                    value += feature->compare( groupFeatureMat, img );
-                }
+                   groupFeatureMat.push_back( desc );
+                   }
+
+                   value += feature->compare( groupFeatureMat, img );
+                   }
+                  */
 
                 feature->clearAccu();
             }
