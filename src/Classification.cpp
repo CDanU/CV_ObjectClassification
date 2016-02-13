@@ -149,6 +149,24 @@ namespace Ue5
         return max;
     }
 
+    const string TestImagesFile = "testimages.txt";
+
+    vector< string > getTestImages( string picturePath )
+    {
+        vector< string > list;
+        ifstream in_stream;
+        in_stream.open( picturePath + TestImagesFile );
+
+        std::string line;
+        while( in_stream.is_open() && !in_stream.eof() )
+        {
+            in_stream >> line;
+            list.push_back( line );
+        }
+
+        return list;
+    }
+
     void Classification::training()
     {
         jsonfileTree.clear();
@@ -164,6 +182,8 @@ namespace Ue5
         // adds found files into files vec
         search( files, picturePath, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
+        vector< string > testImages = getTestImages( picturePath );
+
         // sort files into groups inside groupFilesMap
         for( auto& file : files )
         {
@@ -171,6 +191,18 @@ namespace Ue5
             list.clear();
             match( list, file, regexString, true, true );
             if( list.size() == 0 ) { continue; }
+
+            // dont add image to training when found in testimages list
+            if( testImages.size() > 0 )
+            {
+                auto found = std::find( std::begin( testImages ), std::end( testImages ), file );
+                if( found != std::end( testImages ) )
+                {
+                    testImages.erase( found );                   // make list smaller, when image was found (to be faster)
+                    continue;
+                }
+            }
+
             // .................................................................
 
             auto name = list[1];
@@ -272,8 +304,11 @@ namespace Ue5
     {
         ofstream matFile( "matrix.txt" );
 
-        if( !matFile.is_open() ) { throw "Unable to open matrix.txt"; }
-        if( picturePath.empty() ) { throw "Picture path is empty."; }
+        if( !matFile.is_open() ) { throw runtime_error( "Unable to open matrix.txt" ); }
+        if( picturePath.empty() ) { throw runtime_error("Picture path is empty."); }
+
+        vector< string > testImages = getTestImages( picturePath );
+        if( testImages.size() <= 0 ) { throw exception( ("No Test Images found. Please check your file " + picturePath + TestImagesFile).c_str() ); }
 
         auto & root         = jsonfileTree.getRoot();
         const int maxGroups = int( root.size() );
@@ -281,8 +316,7 @@ namespace Ue5
         // string picturePath = root.get<string>("picturePath"); //  cannot find node
 
         matFile << "[ Confusion Matrix ]" << endl << endl;
-        cout << "Build matrix [" << string( 20, ' ' ) << "] 0%";
-
+        cout << "Build matrix [" << string( 20, ' ' ) << "] 0%" << endl;
 
         vector< string > colTitles;
         vector< string > rowTitles;
@@ -304,12 +338,9 @@ namespace Ue5
             errorRate.push_back( 0 );
             maxValues.push_back( 0 );
 
-            auto filesJSONGrp = group.second.find( "files" );
-            for( auto& fileC : filesJSONGrp->second )
+            for( auto& file : testImages )
             {
-                auto file = fileC.second.data();
-                if( file.empty() ) { continue; }
-
+                //cout << "Check Group " << group.first << " against " << file << endl;
                 parse< Mat >( mat, col, picturePath + file );
                 // cout << " ."  << endl;
             }
