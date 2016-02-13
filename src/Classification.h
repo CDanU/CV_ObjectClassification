@@ -21,9 +21,6 @@ namespace Ue5
             template< typename T, typename U >
             static void printMapSortedByVal( std::ostream& out, std::map< T, U >& m );
 
-            template< typename T >
-            double parse( T& matrix, int row, std::string img );
-
             void start( std::string imagePath );
             void training();
             void showMatrix();

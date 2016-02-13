@@ -40,35 +40,31 @@ namespace Ue5
     {
         // TODO
     }
-
-    template< >
-    double Classification::parse< Mat >( Mat& matrix, int col, string imagePath )
+    struct ParseReturn
     {
-        const Mat img = imread( imagePath );
-        ptree root    = jsonfileTree.getRoot();
+        int    id  = 0;
+        double max = 0;
+    };
+
+    ParseReturn parse( const ptree& root, const FeatureList& featureList, const map< string, FeatureValue >& simpleFeatureMap, const Mat& img )
+    {
         // FeatureValue imageFeature;
         FeatureValue groupFeature;
         FeatureMat groupFeatureMat;
 
-        map< string, double > groupSimilarityCount;
+        // map< string, double > groupSimilarityCount;
 
-        int row    = 0, targetRow = 0;
-        double max = 0;
+        ParseReturn ret;
 
-
-        auto simpleFeatureMap = map< string, FeatureValue >();
-        for( auto& f : featureList )
-        {
-            if( f->getFeatureType() == Feature::Simple )
-            {
-                simpleFeatureMap.insert( make_pair( f->getFilterName(), f->calculate( img ) ) );
-            }
-        }
+        int id       = 0;
+        double value = 0;
 
         for( auto& group : root )
         {
-            groupSimilarityCount.insert( make_pair( group.first, 0 ) );
-            auto & value = groupSimilarityCount.at( group.first );
+            value = 0;
+
+            // groupSimilarityCount.insert( make_pair( group.first, 0 ) );
+            // auto & value = groupSimilarityCount.at( group.first );
 
             for( auto& feature : featureList )
             {
@@ -135,41 +131,66 @@ namespace Ue5
 
             value /= featureList.size();
 
-            if( value > max )
+            if( value > ret.max )
             {
-                max       = value;
-                targetRow = row;
+                ret.max = value;
+                ret.id  = id;
             }
-            ++row;
+
+            ++id;
         }
 
         // printMapSortedByVal(out, groupSimilarityCount);
 
-        matrix.at< double >( targetRow, col ) += max;
-        return max;
+        return ret;
     }
 
     const string TestImagesFile = "testimages.txt";
 
-    vector< string > getTestImages( string picturePath )
+    map< string, string > getTestImages( const ptree& root, string picturePath )
     {
+        const string regexString = "^(.[^_]+).*$";
+
+        map< string, string > group_files;
         vector< string > list;
+
         ifstream in_stream;
         in_stream.open( picturePath + TestImagesFile );
 
-        std::string line;
+        std::string file;
         while( in_stream.is_open() && !in_stream.eof() )
         {
-            in_stream >> line;
-            list.push_back( line );
+            in_stream >> file;
+
+            list.clear();
+            match( list, file, regexString, true, true );
+            if( list.size() == 0 ) { continue; }
+
+            auto name = list[1];
+            group_files.insert( make_pair( file, name ) );
         }
 
-        return list;
+        if( group_files.size() == 0 )
+        {
+            for( auto& group : root )
+            {
+                auto filesJSONGrp = group.second.find( "files" );
+                for( auto& fileC : filesJSONGrp->second )
+                {
+                    auto file = fileC.second.data();
+                    if( file.empty() ) { continue; }
+                    group_files.insert( make_pair( file, group.first ) );
+                }
+            }
+        }
+
+        return group_files;
     }
 
     void Classification::training()
     {
         jsonfileTree.clear();
+        auto & root = jsonfileTree.getRoot();
 
         // filters group name from file name
         const string regexString = "^(.[^_]+).*$";
@@ -182,7 +203,7 @@ namespace Ue5
         // adds found files into files vec
         search( files, picturePath, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
-        vector< string > testImages = getTestImages( picturePath );
+        auto testImages = getTestImages( root, picturePath );
 
         // sort files into groups inside groupFilesMap
         for( auto& file : files )
@@ -192,20 +213,22 @@ namespace Ue5
             match( list, file, regexString, true, true );
             if( list.size() == 0 ) { continue; }
 
+            auto name = list[1];
+
             // dont add image to training when found in testimages list
             if( testImages.size() > 0 )
             {
-                auto found = std::find( std::begin( testImages ), std::end( testImages ), file );
-                if( found != std::end( testImages ) )
+                auto found = testImages.find( file );
+                if( found != testImages.end() )
                 {
-                    testImages.erase( found );                   // make list smaller, when image was found (to be faster)
+                    // make list smaller, when image was found (to be faster)
+                    testImages.erase( found );
                     continue;
                 }
             }
 
             // .................................................................
 
-            auto name = list[1];
             transform( name.begin(), name.end(), name.begin(), ::tolower );
 
             if( groupFilesMap.find( name ) == groupFilesMap.end() ) { groupFilesMap[name] = vector< string >(); }
@@ -214,9 +237,6 @@ namespace Ue5
         }
 
         // write settings in json file
-        auto & root = jsonfileTree.getRoot();
-        // root.put("picturePath", picturePath); // utf8 problem
-
         for( auto& e : groupFilesMap )
         {
             if( e.first.empty() ) { continue; }
@@ -300,6 +320,14 @@ namespace Ue5
         jsonfileTree.write();
     }
 
+    void progressBar( int current, int total, int limit = 35 )
+    {
+        int progress = total > 0 ? int( ( current / double(total) ) * 100 ) : 0;
+        auto bar     = string( int( (progress / 100.0) * limit ), '=' );
+
+        cout << "\r[" << bar << string( limit - bar.length(), ' ' ) << "] " << progress << "%" << flush;
+    }
+
     void Classification::showMatrix()
     {
         ofstream matFile( "matrix.txt" );
@@ -307,16 +335,16 @@ namespace Ue5
         if( !matFile.is_open() ) { throw runtime_error( "Unable to open matrix.txt" ); }
         if( picturePath.empty() ) { throw runtime_error("Picture path is empty."); }
 
-        vector< string > testImages = getTestImages( picturePath );
-        if( testImages.size() <= 0 ) { throw exception( ("No Test Images found. Please check your file " + picturePath + TestImagesFile).c_str() ); }
-
         auto & root         = jsonfileTree.getRoot();
         const int maxGroups = int( root.size() );
+
+        auto testImages = getTestImages( root, picturePath );
+        if( testImages.size() <= 0 ) { throw runtime_error( "No Test Images found!" ); }
 
         // string picturePath = root.get<string>("picturePath"); //  cannot find node
 
         matFile << "[ Confusion Matrix ]" << endl << endl;
-        cout << "Build matrix [" << string( 20, ' ' ) << "] 0%" << endl;
+        cout << "Build matrix..." << endl;
 
         vector< string > colTitles;
         vector< string > rowTitles;
@@ -330,45 +358,76 @@ namespace Ue5
 
         Mat1d mat( maxGroups + 3, maxGroups, double(0) );
 
-        int col = 0;
+        int count_tesimages = int( testImages.size() );
+
         for( auto& group : root )
         {
             colTitles.push_back( group.first );
             rowTitles.push_back( group.first );
             errorRate.push_back( 0 );
             maxValues.push_back( 0 );
-
-            for( auto& file : testImages )
-            {
-                //cout << "Check Group " << group.first << " against " << file << endl;
-                parse< Mat >( mat, col, picturePath + file );
-                // cout << " ."  << endl;
-            }
-
-            ++col;
-
-            // progress bar
-            // -----------------------
-            int progress = int( ( col / double(maxGroups) ) * 100 );
-            auto bar     = string( int( (progress / 100.0) * 20 ), '=' );
-
-            cout << "\r"             // go to first char in line
-                 << "Build matrix [" << bar << string( 20 - bar.length(), ' ' ) << "] " << progress << "%" << endl;
-            // -----------------------
         }
 
-        col = 0;
-        for( auto& group : root )
+        count_tesimages = int( testImages.size() );
+
+        int id      = 0;
+        int current = 0;
+        Mat img;
+        auto simpleFeatureMap = map< string, FeatureValue >();
+
+        progressBar( current, count_tesimages );
+
+        for( auto& fileC : testImages )
         {
-            for( int r = 0; r < maxGroups; ++r )
+            // get group id
+            id = -1;
+            if( root.size() > 0 ) { id = 0; }
+            for( auto& group : root )
             {
-                auto val = mat[r][col];
-                maxValues[col] += val;
-                if( r != col ) { errorRate[col] += val; }
+                if( group.first == fileC.second ) { break; }
+                ++id;
             }
 
-            maxValues[col] = 100.0 / maxValues[col];
-            ++col;
+            if( ( id < 0) || ( id >= int( root.size() ) ) ) { continue; }
+
+            img = imread( picturePath + fileC.first );
+
+            // apply all features to image
+            simpleFeatureMap.clear();
+            for( auto& f : featureList )
+            {
+                if( f->getFeatureType() == Feature::Simple )
+                {
+                    simpleFeatureMap.insert( make_pair( f->getFilterName(), f->calculate( img ) ) );
+                }
+            }
+
+            auto ret = parse( root, featureList, simpleFeatureMap, img );
+            if( ret.max > 0 ) { mat.at< double >( ret.id, id ) += ret.max; }
+
+            ++current;
+
+            progressBar( current, count_tesimages );
+        }
+
+        double v   = 0;
+        double val = 0;
+
+        id = 0;
+        for( auto& group : root )
+        {
+            v   = 0;
+            val = 0;
+
+            for( int r = 0; r < maxGroups; ++r )
+            {
+                v    = mat[r][id];
+                val += v;
+                if( r != id ) { errorRate[id] += v; }
+            }
+
+            if( val > 0 ) { maxValues[id] = 100.0 / val; }
+            ++id;
         }
 
         rowTitles.push_back( "Total" );
@@ -464,7 +523,7 @@ namespace Ue5
             errmax += errr;
         }
 
-        errmax /= errorRate.size();
+        if( errorRate.size() > 0 ) { errmax /= errorRate.size(); }
 
         matFile << endl;
         matFile << "Overall Error Rate      : " << to_string( int( round( errmax ) ) ) << "%" << endl;
@@ -491,7 +550,8 @@ namespace Ue5
         jsonfileTree.open( groupsConfigPath, "rw" );
     }
 
-    Classification::~Classification(){}
+    Classification::~Classification()
+    {}
 
     void Classification::setPicturePath( std::string picturePath )
     {
