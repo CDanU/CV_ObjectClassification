@@ -1,5 +1,17 @@
 #pragma once
 
+
+/**
+ * Applies a convolution filter on an image
+ *
+ * @param _data       : image on which the filter will be applied
+ * @param _output     : container in which the result will be saved
+ * @param FilterArray : the filter itself
+ * @param kHeight     : height of the filter
+ * @param kWidth      : width of the filter
+ * @param constant    : a constant which is added to every output pixel
+ * @param norm        : specifies whether to normalize the output | sum_x,y(abs(filter))
+ */
 template< typename In, typename Out = In >
 void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* FilterArray, int kHeight, int kWidth, int constant = 0, bool norm = true )
 {
@@ -93,7 +105,16 @@ void applyFilter( cv::InputArray _data, cv::OutputArray _output, const int* Filt
     }
 }
 
-
+/**
+ * Moves a window through an image in which everything but the first found max
+ * value of the window region will be removed ( set to 0 )
+ *
+ * @param _data       : image on which the filter will be applied
+ * @param _output     : container in which the result will be saved
+ * @param kWidth      : height of the filter
+ * @param kHeight     : width of the filter
+ * @param borderProcessing : specifies whether enable/disable border processing
+ */
 template< typename Type >
 void maxFilter( cv::InputArray _data, cv::OutputArray _output, int kWidth, int kHeight, bool borderProcessing = true )
 {
