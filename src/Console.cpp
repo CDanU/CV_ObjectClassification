@@ -84,7 +84,7 @@ void Ue5::OpenConsole()
                          << "feature (0..9..) (0..9..) : applies a feature on an image. first: feature index, second: image index" << endl
                          << "show (0..9..)             : displays an image given in list (image index)" << endl
                          << "(train)ing                : start Training for Classification" << endl
-                         << "classify (0..9..)         : start Classification for an image given in list (image index)" << endl
+                         << "classify (0..9..)         : classify a single image (image index)" << endl
                          << "matrix                    : start Classification Matrix" << endl
                          << "(q)uit, exit              : exit program" << endl;
                     return Valid;
@@ -174,10 +174,12 @@ void Ue5::OpenConsole()
         },
         {
             "classify", [&]( string input ){
+                if( files.empty() ) { searchFiles(); }
+
                 auto size      = string( "classify" ).size() + 1;
                 int index      = 0;
                 string numbStr = input.size() > size ? input.substr( size ) : "";
-                auto maxIndex  = !files.empty() ? files.size() - 1 : 0;
+                auto maxIndex  = files.empty() ? 0 : files.size() - 1;
 
                 if( isStrNumber( numbStr, to_string( maxIndex ).size() ) )
                 {

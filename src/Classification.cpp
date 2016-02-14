@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
-#include <clocale> // for stod . separator
+#include <sstream>  // std::ostringstream
 #include <regex>
 #include <string>
 
@@ -32,14 +32,77 @@ namespace Ue5
 
         for( auto p : sortedVec )
         {
-            out << "Group: " << p.first << " -> " << p.second;
+            out << "Group: " << p.first << " -> " << p.second << endl;
         }
     }
 
-    void Classification::start( string imagePath )
+    void Classification::classify( string imgPath )
     {
-        // TODO
+        FeatureValue groupFeature;
+
+        map< string, double > groupSimilarityCount;
+        auto & root  = jsonfileTree.getRoot();
+        int id       = 0;
+        double value = 0;
+
+        Mat img = imread( imgPath );
+        if( img.empty() )
+        {
+            cerr << "Image could not be read: " << imgPath << endl;
+            return;
+        }
+        //----------------------------------------------------------------------
+
+        auto simpleFeatureMap = map< string, FeatureValue >();
+        for( auto& f : featureList )
+        {
+            if( f->getFeatureType() == Feature::Simple )
+            {
+                simpleFeatureMap.insert( make_pair( f->getFilterName(), f->calculate( img ) ) );
+            }
+        }
+
+        for( auto& group : root )
+        {
+            value = 0;
+
+            groupSimilarityCount.insert( make_pair( group.first, 0 ) );
+            auto & value = groupSimilarityCount.at( group.first );
+
+            for( auto& feature : featureList )
+            {
+                auto featureJSONGrp = group.second.find( feature->getFilterName() );
+                if( ( featureJSONGrp == group.second.not_found() ) || featureJSONGrp->second.empty() )
+                { continue; }
+                // -------------------------------------------------------------
+
+                const auto fType = feature->getFeatureType();
+                if( fType == Feature::Simple )
+                {
+                    auto & imageFeature = simpleFeatureMap.at( feature->getFilterName() );
+
+                    groupFeature.clear();
+                    groupFeature.reserve( featureJSONGrp->second.size() );
+                    for( auto entry : featureJSONGrp->second )
+                    {
+                        groupFeature.push_back( entry.second.get_value( 0.0 ) );
+                    }
+
+                    value += feature->compare( groupFeature, imageFeature );
+                }
+                feature->clearAccu();
+            }
+
+            value /= featureList.size();
+        }
+
+        ostringstream out;
+        printMapSortedByVal(out, groupSimilarityCount);
+
+        cout << out.str() << endl;
     }
+
+
     struct ParseReturn
     {
         int    id  = 0;
@@ -48,11 +111,10 @@ namespace Ue5
 
     ParseReturn parse( const ptree& root, const FeatureList& featureList, const map< string, FeatureValue >& simpleFeatureMap, const Mat& img )
     {
-        // FeatureValue imageFeature;
         FeatureValue groupFeature;
         FeatureMat groupFeatureMat;
 
-        // map< string, double > groupSimilarityCount;
+        map< string, double > groupSimilarityCount;
 
         ParseReturn ret;
 
@@ -345,8 +407,6 @@ namespace Ue5
         auto testImages = getTestImages( root, picturePath );
         if( testImages.size() <= 0 ) { throw runtime_error( "No Test Images found!" ); }
 
-        // string picturePath = root.get<string>("picturePath"); //  cannot find node
-
         matFile << "[ Confusion Matrix ]" << endl << endl;
         cout << "Build matrix..." << endl;
 
@@ -357,8 +417,6 @@ namespace Ue5
 
         colTitles.push_back( "Picture / Group" );
         rowTitles.push_back( "Picture / Group" );
-
-        // auto maxTotal = maxFiles > 0 ? (maxFiles < maxGroups ? maxFiles : maxGroups) : maxGroups;
 
         Mat1d mat( maxGroups + 3, maxGroups, double(0) );
 
@@ -542,8 +600,8 @@ namespace Ue5
         resize( mat, scal, Size( 400, 400 ), 0, 0, 0 );
         scal.convertTo( image, CV_8UC1 );
 
-        imshow( "Matrix", image );           // Show our image inside it.
-        waitKey( 0 );           // Wait for a keystroke in the window
+        imshow( "Matrix", image );  // Show our image inside it.
+        waitKey( 0 );               // Wait for a keystroke in the window
         destroyAllWindows();
         waitKey( 1 );
     }
@@ -554,8 +612,7 @@ namespace Ue5
         jsonfileTree.open( groupsConfigPath, "rw" );
     }
 
-    Classification::~Classification()
-    {}
+    Classification::~Classification(){}
 
     void Classification::setPicturePath( std::string picturePath )
     {

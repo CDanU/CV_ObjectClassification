@@ -27,20 +27,13 @@ namespace Ue5
             template< typename T, typename U >
             static void printMapSortedByVal( std::ostream& out, std::map< T, U >& m );
 
+
             /**
-             * TODO
+             * Classifies a single image and prints out similarity results
              *
-             * @param matrix
-             * @param row
-             * @param img
-             * @return
+             * @param imagePath : filepath of the image
              */
-            /**
-             * TODO?
-             *
-             * @param imagePath
-             */
-            void start( std::string imagePath );
+            void classify( std::string imgPath );
 
             /**
              * starts the training process, creates a storage json file

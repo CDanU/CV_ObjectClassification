@@ -65,10 +65,7 @@ void Ue5::Init( std::string appPath )
 // classify single image
 void Ue5::DoClassify( std::string imagePath )
 {
-    std::cout << "Start Classification...\n";
-
-    classification->start( imagePath );
-    std::cout << "Classification done.\n";
+    classification->classify( imagePath );
 }
 
 void Ue5::DoTraining( std::string workpath )
