@@ -13,9 +13,24 @@ namespace Ue5
     class Classification
     {
         private:
+            const std::string TestImagesFile = "testimages.txt";
+
             const FeatureList & featureList;
             JsonFileTree jsonfileTree;
             std::string picturePath;
+
+            struct ParseReturn
+            {
+                int    id  = 0;
+                double max = 0;
+            };
+
+            ParseReturn parse( const std::map< std::string, FeatureValue >& simpleFeatureMap, cv::InputArray img );
+
+            std::map< std::string, std::string > getTestImages();
+
+            void progressBar( int current, int total, int limit );
+
 
         public:
             /**

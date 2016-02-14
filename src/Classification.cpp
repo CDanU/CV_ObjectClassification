@@ -102,20 +102,12 @@ namespace Ue5
         cout << out.str() << endl;
     }
 
-
-    struct ParseReturn
-    {
-        int    id  = 0;
-        double max = 0;
-    };
-
-    ParseReturn parse( const ptree& root, const FeatureList& featureList, const map< string, FeatureValue >& simpleFeatureMap, const Mat& img )
+    Classification::ParseReturn Classification::parse( const map< string, FeatureValue >& simpleFeatureMap, InputArray img )
     {
         FeatureValue groupFeature;
         FeatureMat groupFeatureMat;
-
+        auto & root  = jsonfileTree.getRoot();
         map< string, double > groupSimilarityCount;
-
         ParseReturn ret;
 
         int id       = 0;
@@ -211,10 +203,9 @@ namespace Ue5
         return ret;
     }
 
-    const string TestImagesFile = "testimages.txt";
-
-    map< string, string > getTestImages( const ptree& root, string picturePath )
+    map< string, string > Classification::getTestImages()
     {
+        auto & root  = jsonfileTree.getRoot();
         const string regexString = "^(.[^_]+).*$";
 
         map< string, string > group_files;
@@ -223,12 +214,12 @@ namespace Ue5
         ifstream in_stream;
         in_stream.open( picturePath + TestImagesFile );
 
-        std::string file;
+        string file;
         while( in_stream.is_open() && !in_stream.eof() )
         {
+            list.clear();
             in_stream >> file;
 
-            list.clear();
             match( list, file, regexString, true, true );
             if( list.size() == 0 ) { continue; }
 
@@ -245,6 +236,7 @@ namespace Ue5
                 {
                     auto file = fileC.second.data();
                     if( file.empty() ) { continue; }
+
                     group_files.insert( make_pair( file, group.first ) );
                 }
             }
@@ -269,7 +261,7 @@ namespace Ue5
         // adds found files into files vec
         search( files, picturePath, ".+[.]((jpe?g)|(png)|(bmp))$" );
 
-        auto testImages = getTestImages( root, picturePath );
+        auto testImages = getTestImages();
 
         // sort files into groups inside groupFilesMap
         for( auto& file : files )
@@ -386,9 +378,9 @@ namespace Ue5
         jsonfileTree.write();
     }
 
-    void progressBar( int current, int total, int limit = 35 )
+    void Classification::progressBar( int current, int total, int limit = 35 )
     {
-        int progress = total > 0 ? int( ( current / double(total) ) * 100 ) : 0;
+        int progress = total < 0 ? 0 : int( ( current / double(total) ) * 100 );
         auto bar     = string( int( (progress / 100.0) * limit ), '=' );
 
         cout << "\r[" << bar << string( limit - bar.length(), ' ' ) << "] " << progress << "%" << flush;
@@ -404,7 +396,7 @@ namespace Ue5
         auto & root         = jsonfileTree.getRoot();
         const int maxGroups = int( root.size() );
 
-        auto testImages = getTestImages( root, picturePath );
+        auto testImages = getTestImages();
         if( testImages.size() <= 0 ) { throw runtime_error( "No Test Images found!" ); }
 
         matFile << "[ Confusion Matrix ]" << endl << endl;
@@ -464,7 +456,7 @@ namespace Ue5
                 }
             }
 
-            auto ret = parse( root, featureList, simpleFeatureMap, img );
+            auto ret = parse( simpleFeatureMap, img );
             if( ret.max > 0 ) { mat.at< double >( ret.id, id ) += ret.max; }
 
             ++current;
