@@ -335,18 +335,6 @@ namespace Ue5
 
     Feature::FeatureType FeatureShiCorner::getFeatureType()
     {
-        return Feature::FeatureType::Simple;
-    }
-
-    double FeatureShiCorner::compare( FeatureMat grp, cv::InputArray image )
-    {
-        cerr << "compare( FeatureMat grp, cv::InputArray image ): Not supported for simple Features!" << endl;
-        return 0;
-    }
-
-    FeatureMat FeatureShiCorner::getNormedAccumulateMat()
-    {
-        cerr << "getNormedAccumulateMat(): Not supported for simple Features" << endl;
-        return FeatureMat();
+        return Feature::FeatureType::Descriptor;
     }
 }

@@ -6,7 +6,6 @@
 
 namespace Ue5
 {
-    using FeatureMat   = std::vector< cv::Mat >;
     using FeatureValue = std::vector< double >;
 
     class Feature
@@ -72,27 +71,13 @@ namespace Ue5
              */
             enum FeatureType : uint8_t
             {
-                Simple = 0,   //!< Simple
-                Descriptor = 1//!< Descriptor
+                Simple = 0,
+                Descriptor = 1
             };
 
             /**
              * Returns the feature type
              */
             virtual FeatureType getFeatureType() = 0;
-
-            /**
-             * Tries to find a set of descriptors in an image
-             *
-             * @param grp   : set of descriptors
-             * @param image : image in which the descriptors will searched
-             * @return      : between 0 (no match) and 1 (complete match)
-             */
-            virtual double      compare( FeatureMat grp, cv::InputArray image ) = 0;
-
-            /**
-             * returns accumulated set of descriptors
-             */
-            virtual FeatureMat  getNormedAccumulateMat() = 0;
     };
 }

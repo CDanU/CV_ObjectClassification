@@ -101,11 +101,5 @@ namespace Ue5
 
             //! @see Feature::getFeatureType()
             FeatureType getFeatureType();
-
-            //! @see Feature::compare()
-            double      compare( FeatureMat grp, cv::InputArray image );
-
-            //! @see Feature::getNormedAccumulateMat()
-            FeatureMat  getNormedAccumulateMat();
     };
 }

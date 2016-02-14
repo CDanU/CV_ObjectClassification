@@ -199,16 +199,4 @@ namespace Ue5
     {
         return Feature::FeatureType::Simple;
     }
-
-    double FeatureAverageColor::compare( FeatureMat grp, cv::InputArray image )
-    {
-        cerr << "compare( FeatureMat grp, cv::InputArray image ): Not supported for simple Features!" << endl;
-        return 0;
-    }
-
-    FeatureMat FeatureAverageColor::getNormedAccumulateMat()
-    {
-        cerr << "getNormedAccumulateMat(): Not supported for simple Features" << endl;
-        return FeatureMat();
-    }
 }

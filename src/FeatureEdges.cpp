@@ -420,16 +420,4 @@ namespace Ue5
     {
         return Feature::FeatureType::Simple;
     }
-
-    double FeatureEdges::compare( FeatureMat grp, cv::InputArray image )
-    {
-        cerr << "compare( FeatureMat grp, cv::InputArray image ): Not supported for simple Features!" << endl;
-        return 0;
-    }
-
-    FeatureMat FeatureEdges::getNormedAccumulateMat()
-    {
-        cerr << "getNormedAccumulateMat(): Not supported for simple Features" << endl;
-        return FeatureMat();
-    }
 }
