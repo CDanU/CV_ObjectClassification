@@ -408,7 +408,6 @@ namespace Ue5
 
         rowTitles.push_back( "Total" );
         rowTitles.push_back( "Error Rate" );
-        rowTitles.push_back( "Mean Rank" );
 
         // matrix output
 
@@ -458,10 +457,6 @@ namespace Ue5
                             errorRate[col_index] = dval;
                             mat.at< double >( maxGroups + 2, col_index ) = dval * scaleFactor;
                             cell = to_string( int(dval) );
-                        }
-                        else if( rowTitle == "Mean Rank" )
-                        {
-                            cell = to_string( int(0) );
                         }
                         else if( rowTitle == "Total" )
                         {
