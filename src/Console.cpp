@@ -76,17 +76,18 @@ void Ue5::OpenConsole()
 
     auto help = [&]( string input ){
                     cout << endl << "[ Commands ]" << endl << endl
-                         << "(h)elp                    : this info" << endl
-                         << "path                      : shows current image directory" << endl
-                         << "cd ('path')               : sets image directory ('#reset' resets to default)" << endl
-                         << "ls, list                  : list images in current image directory" << endl
-                         << "features                  : list all features" << endl
-                         << "feature (0..9..) (0..9..) : applies a feature on an image. first: feature index, second: image index" << endl
-                         << "show (0..9..)             : displays an image given in list (image index)" << endl
-                         << "(train)ing                : start Training for Classification" << endl
-                         << "classify (0..9..)         : classify a single image (image index)" << endl
-                         << "matrix                    : start Classification Matrix" << endl
-                         << "(q)uit, exit              : exit program" << endl;
+                         << "h[elp]                                : this info" << endl
+                         << "path                                  : shows current image directory path" << endl
+                         << "cd <path | #reset>                    : sets image directory path, " << endl
+                         << "                                        '#reset' resets to default path" << endl
+                         << "ls | list                             : lists images in current image directory" << endl
+                         << "features                              : lists all available features" << endl
+                         << "feature <feature index> <image index> : applies a feature on an image." << endl
+                         << "show <image index>                    : displays an image" << endl
+                         << "train[ing]                            : starts Training for Classification" << endl
+                         << "classify <image index>                : classify a single image " << endl
+                         << "matrix                                : start Classification Matrix" << endl
+                         << "q[uit] | exit                         : exit program" << endl;
                     return Valid;
                 };
 
